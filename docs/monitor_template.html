@@ -121,7 +121,7 @@
   <div class="tscroll" id="valwrap" style="margin-top:1px;max-height:none"></div>
   <div class="brief" style="margin-top:1px;border-left-color:var(--amber)"><div class="read" id="valread"></div></div>
 
-  <h2>Holder &amp; wallet analysis · confidence or exit? <span>on-chain top holders (Ethplorer · Ethereum) — structure &amp; concentration · snapshot, not a per-wallet time series</span></h2>
+  <h2>Holder, wallet &amp; team-flow analysis · confidence or exit? <span>on-chain top holders + recent large-wallet trade behavior (Ethplorer · Ethereum) — identities unverified, not confirmed team</span></h2>
   <div class="rangebar" id="holdbar" style="border-left-color:var(--up)">—</div>
   <div class="tscroll" id="holdwrap" style="margin-top:1px;max-height:none"></div>
   <div class="brief" style="margin-top:1px;border-left-color:var(--amber)"><div class="read" id="holdread"></div></div>
@@ -288,19 +288,26 @@ var DATA = __DATA__;
   (function(){
     var H=S.holders; if(!H||!H.rows){return;}
     var kc={locked:'var(--up)',structural:'var(--blue)',contract:'var(--dim)',wallet:'var(--amber)'};
+    var fl=H.flows||{};
+    function fmtN(v){var a=Math.abs(v),s=v>=0?'+':'-';return s+(a>=1e6?(a/1e6).toFixed(1)+'M':a>=1e3?(a/1e3).toFixed(0)+'k':a.toFixed(0));}
     $("holdbar").innerHTML='<b>'+H.holders_count.toLocaleString()+' holders</b> · top-1 '+H.top1.toFixed(0)+'% · top-10 '+H.top10.toFixed(0)+'%. '+
-      '<span class="up">Locked veFXS '+H.locked_share.toFixed(0)+'%</span> · structural/bridge '+H.structural_share.toFixed(0)+'% · protocol '+H.contract_share.toFixed(0)+'% · '+
-      '<span class="amber">individual wallets '+H.wallet_share.toFixed(0)+'%</span> → <b>'+H.committed_share.toFixed(0)+'% non-liquid</b> (locked, migrated or protocol-held).';
-    var h='<table><thead><tr><th>#</th><th>Share</th><th>Type</th><th>Wallet / label</th><th>Address</th></tr></thead><tbody>';
+      '<span class="up">veFXS locked '+H.locked_share.toFixed(0)+'%</span> · bridge/system '+H.structural_share.toFixed(0)+'% · protocol '+H.contract_share.toFixed(0)+'% · '+
+      '<span class="amber">individual wallets '+H.wallet_share.toFixed(0)+'%</span> → <b>'+H.committed_share.toFixed(0)+'% non-liquid</b>. '+
+      'Top EOAs: <b class="up">'+(fl.accumulating||0)+' accumulating</b> · '+(fl.distributing||0)+' distributing · '+(fl.dormant||0)+' dormant.';
+    var h='<table><thead><tr><th>#</th><th>Share</th><th>Type</th><th>Wallet / label</th><th>Recent net flow (FXS)</th><th>Address</th></tr></thead><tbody>';
     H.rows.forEach(function(r,i){
+      var fcell='—';
+      if(r.flow){var dc=r.flow.dir.indexOf('accumulating')>=0?'up':r.flow.dir.indexOf('distributing')>=0?'down':'dim';
+        fcell='<span class="'+dc+'">'+fmtN(r.flow.net)+' · '+r.flow.dir+(r.flow.days_since!=null?' ('+r.flow.days_since+'d)':'')+'</span>';}
       h+='<tr><td class="dim">'+(i+1)+'</td><td class="tnum" style="color:'+(kc[r.kind]||'var(--amber)')+'">'+r.share.toFixed(2)+'%</td>'+
          '<td style="color:'+(kc[r.kind]||'var(--amber)')+'">'+r.kind+'</td><td>'+r.label+'</td>'+
+         '<td style="text-align:left;font-size:10.5px">'+fcell+'</td>'+
          '<td class="dim" style="font-size:10px">'+r.addr.slice(0,10)+'…'+r.addr.slice(-4)+'</td></tr>';
     });
     $("holdwrap").innerHTML=h+'</tbody></table>';
-    $("holdread").innerHTML='<b>Confidence or exit? —</b> the observable structure <span class="up">leans confidence, not distribution</span>. '+
-      Math.round(H.locked_share)+'% is <b>vote-escrowed (veFXS)</b> — holders voluntarily locking up to 4 years, forgoing liquidity for governance/yield, a commitment signal; another '+Math.round(H.structural_share)+'% sits in the <b>Fraxtal-era system contract</b> (supply migrated to the L2, not sold). The largest <i>individual</i> wallet is only ~'+H.rows.filter(function(r){return r.kind==="wallet";})[0].share.toFixed(1)+'%, so no single whale can flush the market, and there is no concentration signature of insiders dumping. '+
-      '<b>Honest limits:</b> this is <b>Ethereum-only</b> — after North Star the active holder base moved to <b>Fraxtal</b>, which this source does not index; and it is a <b>snapshot, not a time series</b>, so it shows structure, not proven per-wallet accumulation vs exit. A rigorous flow (accumulation/distribution) read needs a Fraxtal indexer or a Nansen/Arkham/Dune key. (Source: Ethplorer, current.)';
+    $("holdread").innerHTML='<b>Confidence or exit? —</b> the observable behavior <span class="up">leans accumulation, not distribution</span>. Of the top individual wallets, <b class="up">'+(fl.accumulating||0)+' show net inflows</b> (one within days), <b>'+(fl.distributing||0)+' show net outflows</b>, and '+(fl.dormant||0)+' have sat dormant since 2023–24 — no distribution signature. Structurally, '+Math.round(H.locked_share)+'% is vote-escrowed (up to 4-yr locks) and '+Math.round(H.structural_share)+'% migrated to the Fraxtal bridge; the largest single wallet is only ~'+H.rows.filter(function(r){return r.kind==="wallet";})[0].share.toFixed(1)+'%, so no whale can flush the market. '+
+      '<b>What this is NOT:</b> these are <b>large holders of unverified identity — not confirmed team/insider wallets</b>, and net transfer flow ≠ confirmed buys/sells (an inflow can be a CEX withdrawal or an inter-wallet move). '+
+      '<b>Research limits:</b> definitive <b>team-wallet</b> identification + trade forensics need labeled data (Arkham/Nansen) and keyed explorers — Etherscan &amp; Fraxscan now require a V2 API key, and the post-North-Star base lives on <b>Fraxtal</b>, which needs its own indexer. Provide any of those and this becomes a true team/insider flow + exchange-netflow analysis. (Source: Ethplorer, Ethereum, current.)';
   })();
 
   // ── fundamental valuation · P/F vs peers ──

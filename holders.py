@@ -38,6 +38,34 @@ def _get(path, **params):
     return requests.get(f"{API}/{path}", params=params, timeout=20).json()
 
 
+def _wallet_flow(addr):
+    """Recent net FXS flow for one wallet (transfers, not confirmed buys/sells)."""
+    try:
+        d = _get(f"getAddressHistory/{addr}", token=FXS, type="transfer", limit=10)
+        ops = d.get("operations", [])
+        if not ops:
+            return None
+        a = addr.lower(); net = 0.0; last = 0
+        for o in ops:
+            v = float(o["value"]) / 1e18
+            net += v if o["to"].lower() == a else -v
+            last = max(last, int(o.get("timestamp", 0)))
+        days = (time.time() - last) / 86400 if last else None
+        if days is not None and days > 365:
+            direction = "dormant / holding"
+        elif net > 0:
+            direction = "net inflow (accumulating)"
+        elif net < 0:
+            direction = "net outflow (distributing)"
+        else:
+            direction = "flat"
+        return {"net": round(net, 0), "last_ts": last,
+                "days_since": round(days) if days is not None else None,
+                "dir": direction, "n": len(ops)}
+    except Exception:
+        return None
+
+
 def run(top=12):
     if requests is None:
         return None
@@ -47,9 +75,10 @@ def run(top=12):
         holders = th.get("holders", [])
         if not holders:
             return None
-        rows = []
+        rows = []; flows_done = 0
         for h in holders:
             a = h["address"].lower(); share = float(h.get("share", 0))
+            flow = None
             if a in KNOWN:
                 label, kind = KNOWN[a]
             else:
@@ -58,9 +87,12 @@ def run(top=12):
                     is_c = bool(info.get("contractInfo")) or bool(info.get("tokenInfo"))
                 except Exception:
                     is_c = False
-                label, kind = ("protocol / contract", "contract") if is_c else ("individual wallet (EOA)", "wallet")
+                label, kind = ("protocol / contract", "contract") if is_c else ("large wallet — EOA (identity unverified)", "wallet")
                 time.sleep(0.2)
-            rows.append({"addr": h["address"], "share": round(share, 2), "label": label, "kind": kind})
+                if kind == "wallet" and flows_done < 6:      # recent trade behavior for top EOAs
+                    flow = _wallet_flow(h["address"]); flows_done += 1; time.sleep(0.2)
+            rows.append({"addr": h["address"], "share": round(share, 2), "label": label,
+                         "kind": kind, "flow": flow})
         by = lambda k: round(sum(r["share"] for r in rows if r["kind"] == k), 2)
         locked = by("locked"); structural = by("structural"); contract = by("contract"); wallet = by("wallet")
         return {
@@ -72,6 +104,11 @@ def run(top=12):
             "locked_share": locked, "structural_share": structural,
             "contract_share": contract, "wallet_share": wallet,
             "committed_share": round(locked + structural + contract, 2),  # non-EOA
+            "flows": {
+                "accumulating": sum(1 for r in rows if r.get("flow") and "accumulating" in r["flow"]["dir"]),
+                "distributing": sum(1 for r in rows if r.get("flow") and "distributing" in r["flow"]["dir"]),
+                "dormant": sum(1 for r in rows if r.get("flow") and "dormant" in r["flow"]["dir"]),
+            },
         }
     except Exception as e:
         return {"error": str(e)[:120]}
