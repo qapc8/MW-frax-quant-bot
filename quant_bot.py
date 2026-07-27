@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Frax Quant Bot
-==============
+MW Frax Quant Bot  (MW-QB)
+==========================
 
 A signal-gated, staged-leverage quant bot for the Frax ecosystem.
 
@@ -53,6 +53,8 @@ except ImportError:
 
 log = logging.getLogger("fmb")
 
+BOT_NAME = "MW-QB"  # MW Frax Quant Bot — identifier shown in logs
+
 
 # ── Thesis trajectory ───────────────────────────────────────────────────────
 
@@ -88,6 +90,7 @@ class State:
     def __init__(self, path: str, starting_quote: float):
         self.path = Path(path)
         self.phase = "IDLE"            # IDLE | SPOT | HOUSE
+        self.seeded = False            # whether an existing position has been loaded
         self.free_quote = starting_quote
         self.safe_quote = 0.0          # banked principal (never re-risked automatically)
         self.realized_pnl = 0.0
@@ -98,6 +101,7 @@ class State:
         self.spot_entry = 0.0
         self.spot_cost = 0.0
         self.spot_stop = 0.0
+        self.stop_armed = False        # protective stop only acts once price >= entry
 
         # Leveraged (house) leg
         self.lev_margin = 0.0          # house money posted as collateral
@@ -138,6 +142,34 @@ class QuantBot:
         self.state = State(cfg["engine"]["state_file"], cfg["risk"]["quote_balance"])
         self.exchange = self._make_exchange()
         self._running = True
+        self._maybe_seed()
+
+    def _maybe_seed(self):
+        """Load a pre-existing spot position from config so the bot manages it
+        instead of opening its own. Runs once (tracked by state.seeded)."""
+        seed = (self.cfg.get("position") or {}).get("seed") or {}
+        if not seed.get("enabled") or self.state.seeded:
+            return
+        if self.state.phase != "IDLE":
+            self.state.seeded = True
+            self.state.save()
+            return
+        entry = float(seed["avg_entry"])
+        amount = float(seed["amount"])
+        s = self.state
+        s.phase = "SPOT"
+        s.spot_amount = amount
+        s.spot_entry = entry
+        s.spot_cost = entry * amount
+        s.spot_stop = entry * (1 - self.cfg["strategy"]["spot_stop_pct"])
+        s.seeded = True
+        trig = self.cfg["strategy"].get("leverage_trigger_price", 0) or 0
+        mult = trig / entry if trig else self.cfg["strategy"]["double_target"]
+        log.info("[%s] SEEDED position: %.0f FXS @ avg %.4f (cost %.2f), decision px %.4f | "
+                 "spot stop %.4f | leverage triggers @ %.4f (%.2fx entry)",
+                 BOT_NAME, amount, entry, s.spot_cost,
+                 float(seed.get("limit_price", entry)), s.spot_stop, trig, mult)
+        s.save()
 
     def _make_exchange(self):
         if ccxt is None:
@@ -175,8 +207,8 @@ class QuantBot:
         price = float(df["close"].iloc[-2])  # last closed candle
         conv = sig.composite(df, self.cfg["signals"], self.cfg["momentum"])
         f = conv["factors"]
-        log.info("[%s] %s phase=%s px=%.4f conv=%.2f (mom %.2f tvl %.2f soc %.2f news %.2f) eq=%.2f",
-                 "LIVE" if self.live else "PAPER", self.symbol, self.state.phase, price,
+        log.info("[%s|%s] %s phase=%s px=%.4f conv=%.2f (mom %.2f tvl %.2f soc %.2f news %.2f) eq=%.2f",
+                 BOT_NAME, "LIVE" if self.live else "PAPER", self.symbol, self.state.phase, price,
                  conv["score"], f["momentum"], f["tvl"], f["social"], f["news"],
                  self.state.equity(price))
 
@@ -213,6 +245,7 @@ class QuantBot:
         self.state.spot_entry = price
         self.state.spot_cost = alloc
         self.state.spot_stop = price * (1 - self.cfg["strategy"]["spot_stop_pct"])
+        self.state.stop_armed = True  # own entry is at market -> stop live immediately
         log.info("ENTER SPOT: %.6f @ %.4f cost %.2f stop %.4f (2x target value %.2f)",
                  amount, price, alloc, self.state.spot_stop,
                  alloc * self.cfg["strategy"]["double_target"])
@@ -222,7 +255,15 @@ class QuantBot:
         s = self.state
         value = s.spot_amount * price
 
-        if price <= s.spot_stop:
+        # Forward-scenario arming: the protective stop stays dormant until price
+        # first reaches the entry, so a position seeded above current market is
+        # held (not instantly stopped) while it waits for the thesis to play out.
+        if not s.stop_armed and price >= s.spot_entry:
+            s.stop_armed = True
+            log.info("Spot stop ARMED: price %.4f reached entry %.4f (stop %.4f now live)",
+                     price, s.spot_entry, s.spot_stop)
+
+        if s.stop_armed and price <= s.spot_stop:
             self._market_sell(s.spot_amount, price, "spot stop")
             proceeds = value
             pnl = proceeds - s.spot_cost
@@ -233,10 +274,17 @@ class QuantBot:
             self._reset_spot(); s.phase = "IDLE"
             return
 
-        target_value = s.spot_cost * self.cfg["strategy"]["double_target"]
-        if value >= target_value:
+        st = self.cfg["strategy"]
+        trig = st.get("leverage_trigger_price", 0) or 0
+        if trig > 0:
+            reached = price >= trig            # absolute price trigger
+            tag = f"trigger {trig:.4f} reached -> bank principal"
+        else:
+            reached = value >= s.spot_cost * st["double_target"]
+            tag = "2x reached -> bank principal"
+        if reached:
             # Bank principal, deploy profit as leveraged house money.
-            self._market_sell(s.spot_amount, price, "2x reached -> bank principal")
+            self._market_sell(s.spot_amount, price, tag)
             proceeds = value
             profit = proceeds - s.spot_cost
             s.safe_quote += s.spot_cost           # principal preserved
@@ -319,6 +367,7 @@ class QuantBot:
     def _reset_spot(self):
         s = self.state
         s.spot_amount = s.spot_entry = s.spot_cost = s.spot_stop = 0.0
+        s.stop_armed = False
 
     def _reset_leverage(self):
         s = self.state
@@ -380,11 +429,13 @@ class QuantBot:
                     phase = "SPOT"
             elif phase == "SPOT":
                 value = spot_amt * price
+                trig = st.get("leverage_trigger_price", 0) or 0
+                lev_reached = (price >= trig) if trig > 0 else (value >= spot_cost * st["double_target"])
                 if price <= spot_stop:
                     free += value
                     trades += 1
                     phase = "IDLE"
-                elif value >= spot_cost * st["double_target"]:
+                elif lev_reached:
                     profit = value - spot_cost
                     safe += spot_cost
                     if profit > 0:

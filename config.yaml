@@ -54,11 +54,24 @@ momentum:
 # ── Core strategy: 2x, then leverage the house money ────────────────────────
 strategy:
   double_target: 2.0        # bank principal once position value reaches this multiple
+  leverage_trigger_price: 4.4  # ABSOLUTE price at which the leverage leg kicks in.
+                            # When > 0 this overrides double_target. Entry 2.31 -> 4.4 ≈ 1.9x.
   spot_stop_pct: 0.12       # protective stop on the initial spot leg
-  leverage: 3.0             # leverage applied to PROFITS (house money) after 2x
+  leverage: 3.0             # leverage applied to PROFITS (house money) after trigger
   leverage_target_mult: 2.0 # optional take-profit on the leveraged leg (x on margin)
   house_stop_frac: 0.50     # stop the leveraged leg after losing this fraction of house money
   trailing_stop_pct: 0.08   # trailing stop on the leveraged leg (0 to disable)
+
+# ── Existing position to manage (seed) ──────────────────────────────────────
+# Pre-load a spot position the bot should manage instead of opening its own.
+# When enabled, the bot starts in the SPOT phase holding this position and
+# watches for the leverage_trigger_price above.
+position:
+  seed:
+    enabled: true
+    avg_entry: 2.31         # average fill price of the FXS bought
+    amount: 124481          # total FXS held
+    limit_price: 2.41       # informational: original decision/limit price
 
 risk:
   quote_balance: 1000.0     # starting paper balance (quote currency)

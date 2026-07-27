@@ -1,6 +1,7 @@
-# Frax Quant Bot
+# MW Frax Quant Bot  (MW-QB)
 
-A signal-gated, staged-leverage quant bot for the Frax ecosystem.
+A signal-gated, staged-leverage quant bot for the Frax ecosystem. Logs are
+tagged `MW-QB` for clear identification.
 
 > ⚠️ **Reality check.** FRAX is a **collateral-backed stablecoin pegged to $1**.
 > A move to $3 or $5 would be a catastrophic *upward* depeg that mint/redeem
@@ -43,12 +44,36 @@ A signal-gated, staged-leverage quant bot for the Frax ecosystem.
 2. **SPOT** — deploy principal into a spot long with a protective stop
    (`spot_stop_pct`).
 
-3. **2x → HOUSE** — once position value reaches `double_target` (2x),
+3. **Trigger → HOUSE** — once the leverage trigger is hit,
    **bank the principal to safe cash** and deploy only the *profit* ("house
    money") into a leveraged long with an adequate stop (`house_stop_frac` of the
    house money) kept above the computed liquidation price. Principal is
-   preserved; only house money is ever leveraged. If 2x is never reached, the
-   leverage leg never fires.
+   preserved; only house money is ever leveraged. If the trigger is never
+   reached, the leverage leg never fires.
+
+   The trigger is either an **absolute price** (`strategy.leverage_trigger_price`,
+   e.g. `4.4`) when set, otherwise a **multiple** (`strategy.double_target`, e.g.
+   2x cost basis).
+
+## Managing an existing position (seed)
+
+Set `position.seed.enabled: true` to have the bot manage a position you already
+hold instead of opening its own:
+
+```yaml
+position:
+  seed:
+    enabled: true
+    avg_entry: 2.31     # your average fill
+    amount: 124481      # FXS held
+    limit_price: 2.41   # informational: original decision price
+```
+
+The bot starts in the SPOT phase holding it and watches for
+`leverage_trigger_price`. **Forward-scenario stop arming:** the protective stop
+stays dormant until price first reaches your `avg_entry`, so a position seeded
+above the current market is *held* (not instantly stopped) while it waits for
+the thesis to play out. Once price reaches entry, the stop goes live.
 
 ## Setup
 
