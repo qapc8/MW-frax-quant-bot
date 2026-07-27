@@ -30,6 +30,7 @@ import pandas as pd
 
 import ccxt
 import diligence
+import holders as holders_mod
 import valuation
 import signals as sig
 from quant_bot import load_cfg
@@ -343,6 +344,7 @@ def build_log(cfg, entry_iso, end_iso):
     last = rows[-1]; worst = min(rows, key=lambda x: x["day_ret"]); best = max(rows, key=lambda x: x["day_ret"])
     diligence_res = diligence.run(ex, cfg, last["close"], an["vol_ann"], btc_close)
     valuation_res = valuation.run()
+    holders_res = holders_mod.run()
     # cross-denominated returns: position return expressed in BTC / ETH terms
     ed, ld = rows[0]["date"], rows[-1]["date"]
     def _denom(cd):
@@ -372,7 +374,7 @@ def build_log(cfg, entry_iso, end_iso):
                "exit_net": last["exit_net"], "exit_days": last["exit_days"],
                "leverage": cfg["strategy"]["leverage"], "house_stop_frac": cfg["strategy"]["house_stop_frac"],
                "lev_target_mult": cfg["strategy"].get("leverage_target_mult"), "macro": macro,
-               "diligence": diligence_res, "valuation": valuation_res,
+               "diligence": diligence_res, "valuation": valuation_res, "holders": holders_res,
                "worst_day": {"date": worst["date"], "ret": worst["day_ret"]},
                "best_day": {"date": best["date"], "ret": best["day_ret"]},
                "generated": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")}

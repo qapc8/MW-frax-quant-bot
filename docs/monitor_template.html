@@ -121,6 +121,11 @@
   <div class="tscroll" id="valwrap" style="margin-top:1px;max-height:none"></div>
   <div class="brief" style="margin-top:1px;border-left-color:var(--amber)"><div class="read" id="valread"></div></div>
 
+  <h2>Holder &amp; wallet analysis · confidence or exit? <span>on-chain top holders (Ethplorer · Ethereum) — structure &amp; concentration · snapshot, not a per-wallet time series</span></h2>
+  <div class="rangebar" id="holdbar" style="border-left-color:var(--up)">—</div>
+  <div class="tscroll" id="holdwrap" style="margin-top:1px;max-height:none"></div>
+  <div class="brief" style="margin-top:1px;border-left-color:var(--amber)"><div class="read" id="holdread"></div></div>
+
   <h2>Institutional diligence · in June-2025 perspective <span>backtest significance · factor alpha · Monte-Carlo forward EV — as-of-now (post-crash) vs ex-ante Jun-2025 thesis-conditioned</span></h2>
   <div class="brief" id="dilig"></div>
 
@@ -277,6 +282,25 @@ var DATA = __DATA__;
     tb+='</tbody></table></span></div>';
     var note='<div class="read" style="border-left-color:var(--up)"><b>As of June 2025 —</b> catalysts are real and sourced (North Star FIP-428; frxUSD/BUIDL via BlackRock/Securitize; GENIUS Act). Projected values are computed from the strategy’s payoff structure at the thesis price targets — <b>a projection, not realized</b>. What actually happened (the −'+Math.abs(Math.round(S.cumret*100))+'% drawdown, the diligence below) remains on this page unchanged; this section shows why the position was rational to open in the June-2025 context, not that it worked out.</div>';
     $("thesis").innerHTML=lead+d1+d2+d3+d4+d5+tb+note;
+  })();
+
+  // ── holder / wallet analysis ──
+  (function(){
+    var H=S.holders; if(!H||!H.rows){return;}
+    var kc={locked:'var(--up)',structural:'var(--blue)',contract:'var(--dim)',wallet:'var(--amber)'};
+    $("holdbar").innerHTML='<b>'+H.holders_count.toLocaleString()+' holders</b> · top-1 '+H.top1.toFixed(0)+'% · top-10 '+H.top10.toFixed(0)+'%. '+
+      '<span class="up">Locked veFXS '+H.locked_share.toFixed(0)+'%</span> · structural/bridge '+H.structural_share.toFixed(0)+'% · protocol '+H.contract_share.toFixed(0)+'% · '+
+      '<span class="amber">individual wallets '+H.wallet_share.toFixed(0)+'%</span> → <b>'+H.committed_share.toFixed(0)+'% non-liquid</b> (locked, migrated or protocol-held).';
+    var h='<table><thead><tr><th>#</th><th>Share</th><th>Type</th><th>Wallet / label</th><th>Address</th></tr></thead><tbody>';
+    H.rows.forEach(function(r,i){
+      h+='<tr><td class="dim">'+(i+1)+'</td><td class="tnum" style="color:'+(kc[r.kind]||'var(--amber)')+'">'+r.share.toFixed(2)+'%</td>'+
+         '<td style="color:'+(kc[r.kind]||'var(--amber)')+'">'+r.kind+'</td><td>'+r.label+'</td>'+
+         '<td class="dim" style="font-size:10px">'+r.addr.slice(0,10)+'…'+r.addr.slice(-4)+'</td></tr>';
+    });
+    $("holdwrap").innerHTML=h+'</tbody></table>';
+    $("holdread").innerHTML='<b>Confidence or exit? —</b> the observable structure <span class="up">leans confidence, not distribution</span>. '+
+      Math.round(H.locked_share)+'% is <b>vote-escrowed (veFXS)</b> — holders voluntarily locking up to 4 years, forgoing liquidity for governance/yield, a commitment signal; another '+Math.round(H.structural_share)+'% sits in the <b>Fraxtal-era system contract</b> (supply migrated to the L2, not sold). The largest <i>individual</i> wallet is only ~'+H.rows.filter(function(r){return r.kind==="wallet";})[0].share.toFixed(1)+'%, so no single whale can flush the market, and there is no concentration signature of insiders dumping. '+
+      '<b>Honest limits:</b> this is <b>Ethereum-only</b> — after North Star the active holder base moved to <b>Fraxtal</b>, which this source does not index; and it is a <b>snapshot, not a time series</b>, so it shows structure, not proven per-wallet accumulation vs exit. A rigorous flow (accumulation/distribution) read needs a Fraxtal indexer or a Nansen/Arkham/Dune key. (Source: Ethplorer, current.)';
   })();
 
   // ── fundamental valuation · P/F vs peers ──

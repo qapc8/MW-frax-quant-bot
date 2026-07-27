@@ -121,6 +121,11 @@
   <div class="tscroll" id="valwrap" style="margin-top:1px;max-height:none"></div>
   <div class="brief" style="margin-top:1px;border-left-color:var(--amber)"><div class="read" id="valread"></div></div>
 
+  <h2>Holder &amp; wallet analysis · confidence or exit? <span>on-chain top holders (Ethplorer · Ethereum) — structure &amp; concentration · snapshot, not a per-wallet time series</span></h2>
+  <div class="rangebar" id="holdbar" style="border-left-color:var(--up)">—</div>
+  <div class="tscroll" id="holdwrap" style="margin-top:1px;max-height:none"></div>
+  <div class="brief" style="margin-top:1px;border-left-color:var(--amber)"><div class="read" id="holdread"></div></div>
+
   <h2>Institutional diligence · in June-2025 perspective <span>backtest significance · factor alpha · Monte-Carlo forward EV — as-of-now (post-crash) vs ex-ante Jun-2025 thesis-conditioned</span></h2>
   <div class="brief" id="dilig"></div>
 
@@ -338,7 +343,7 @@ var DATA = {
         "min_trl_years": 13.1
       },
       "factor": {
-        "alpha_ann": 0.1612,
+        "alpha_ann": 0.1613,
         "beta_btc": 0.299,
         "t_alpha": 0.73,
         "r2": 0.13,
@@ -383,87 +388,87 @@ var DATA = {
         {
           "sym": "LDO",
           "name": "Lido",
-          "mcap": 319085564,
+          "mcap": 319052188,
           "fees_1y": 721626067,
-          "price": 0.381585,
+          "price": 0.381461,
           "pf": 0.44
         },
         {
           "sym": "USUAL",
           "name": "Usual",
-          "mcap": 15658081,
+          "mcap": 15795012,
           "fees_1y": 19289488,
-          "price": 0.0084294,
-          "pf": 0.81
+          "price": 0.00849867,
+          "pf": 0.82
         },
         {
           "sym": "AAVE",
           "name": "Aave",
-          "mcap": 1533606291,
+          "mcap": 1532785947,
           "fees_1y": 892864523,
-          "price": 99.43,
+          "price": 99.45,
           "pf": 1.72
         },
         {
           "sym": "FRAX",
           "name": "Frax (frxUSD/Fraxtal)",
-          "mcap": 24533933,
+          "mcap": 24534996,
           "fees_1y": 11741976.0,
-          "price": 0.262115,
+          "price": 0.262042,
           "pf": 2.09
         },
         {
           "sym": "ENA",
           "name": "Ethena",
-          "mcap": 839499915,
+          "mcap": 841826208,
           "fees_1y": 350027911.0,
-          "price": 0.087822,
-          "pf": 2.4
+          "price": 0.088045,
+          "pf": 2.41
         },
         {
           "sym": "SKY",
           "name": "Sky (Maker)",
-          "mcap": 1335646618,
+          "mcap": 1336287456,
           "fees_1y": 412323602,
-          "price": 0.057156,
+          "price": 0.05714,
           "pf": 3.24
         },
         {
           "sym": "CRV",
           "name": "Curve",
-          "mcap": 316180992,
+          "mcap": 315810351,
           "fees_1y": 62502447.0,
-          "price": 0.205067,
-          "pf": 5.06
+          "price": 0.204891,
+          "pf": 5.05
         },
         {
           "sym": "CVX",
           "name": "Convex",
-          "mcap": 137503711,
+          "mcap": 138100664,
           "fees_1y": 21288792,
           "price": 1.38,
-          "pf": 6.46
+          "pf": 6.49
         },
         {
           "sym": "LQTY",
           "name": "Liquity",
-          "mcap": 19405520,
+          "mcap": 19357166,
           "fees_1y": 2748549.0,
-          "price": 0.196181,
-          "pf": 7.06
+          "price": 0.19595,
+          "pf": 7.04
         },
         {
           "sym": "SPELL",
           "name": "Abracadabra",
-          "mcap": 13906403,
+          "mcap": 13904862,
           "fees_1y": 1322842,
-          "price": 8.105e-05,
+          "price": 8.108e-05,
           "pf": 10.51
         },
         {
           "sym": "PENDLE",
           "name": "Pendle",
-          "mcap": 265108304,
+          "mcap": 265155859,
           "fees_1y": 24072625,
           "price": 1.54,
           "pf": 11.01
@@ -471,31 +476,116 @@ var DATA = {
         {
           "sym": "RSR",
           "name": "Reserve",
-          "mcap": 78653658,
+          "mcap": 78632107,
           "fees_1y": 6365080,
-          "price": 0.0012571,
-          "pf": 12.36
+          "price": 0.00125782,
+          "pf": 12.35
         }
       ],
-      "median_pf": 5.06,
+      "median_pf": 5.05,
       "n_peers": 11,
       "frax_tvl": 42317969.294700734,
       "target_price": 5.0,
       "frax": {
         "sym": "FRAX",
         "name": "Frax (frxUSD/Fraxtal)",
-        "mcap": 24533933,
+        "mcap": 24534996,
         "fees_1y": 11741976.0,
-        "price": 0.262115,
+        "price": 0.262042,
         "pf": 2.09
       },
       "rerating_mult": 2.42,
-      "implied_price_rerate": 0.6346,
-      "implied_mcap_rerate": 59397943.0,
-      "target_mcap": 467999409.0,
-      "fees_needed": 92490002.0,
+      "implied_price_rerate": 0.6332,
+      "implied_mcap_rerate": 59283124.0,
+      "target_mcap": 468150068.0,
+      "fees_needed": 92702984.0,
       "fee_growth_x": 7.9,
       "target_pf_on_current_fees": 39.9
+    },
+    "holders": {
+      "holders_count": 17719,
+      "price": 0.26199468982850566,
+      "rows": [
+        {
+          "addr": "0x36cb65c1967a0fb0eee11569c51c2f2aa1ca6f6d",
+          "share": 53.95,
+          "label": "Frax system contract (Fraxtal-era, ~L2 bridge/lockbox)",
+          "kind": "structural"
+        },
+        {
+          "addr": "0xc8418af6358ffdda74e09ca9cc3fe03ca6adc5b0",
+          "share": 16.98,
+          "label": "veFXS \u2014 vote-escrowed (locked)",
+          "kind": "locked"
+        },
+        {
+          "addr": "0xb1748c79709f4ba2dd82834b8c82d4a505003f27",
+          "share": 2.7,
+          "label": "protocol / contract",
+          "kind": "contract"
+        },
+        {
+          "addr": "0xe0dd07b181ca77ed9063821b4d2d28a85f722f5f",
+          "share": 2.19,
+          "label": "individual wallet (EOA)",
+          "kind": "wallet"
+        },
+        {
+          "addr": "0x12d7df4910d3dc0867cc7720e3bec6260b4b1100",
+          "share": 2.08,
+          "label": "individual wallet (EOA)",
+          "kind": "wallet"
+        },
+        {
+          "addr": "0x6fcfee4f14eafa723d90ad4b282757c5fe3d92ee",
+          "share": 1.43,
+          "label": "individual wallet (EOA)",
+          "kind": "wallet"
+        },
+        {
+          "addr": "0xd8b42cebc82607226f68a5373d99f54b397f886a",
+          "share": 1.21,
+          "label": "individual wallet (EOA)",
+          "kind": "wallet"
+        },
+        {
+          "addr": "0xd53e50c63b0d549f142a2dcfc454501aaa5b7f3f",
+          "share": 1.06,
+          "label": "individual wallet (EOA)",
+          "kind": "wallet"
+        },
+        {
+          "addr": "0x73781209f3b0f195d0d3fa9d6b95bb61c54c1ca6",
+          "share": 0.91,
+          "label": "individual wallet (EOA)",
+          "kind": "wallet"
+        },
+        {
+          "addr": "0x602d9abd5671d24026e2ca473903ff2a9a957407",
+          "share": 0.66,
+          "label": "individual wallet (EOA)",
+          "kind": "wallet"
+        },
+        {
+          "addr": "0xd51e42ca4db0fad80bcc4cc216f98c9b44e98cb7",
+          "share": 0.53,
+          "label": "individual wallet (EOA)",
+          "kind": "wallet"
+        },
+        {
+          "addr": "0x4a6d155df9ec9a1bb3639e6b7b99e46fb68d42f6",
+          "share": 0.5,
+          "label": "protocol / contract",
+          "kind": "contract"
+        }
+      ],
+      "top1": 53.95,
+      "top10": 83.17,
+      "locked_share": 16.98,
+      "structural_share": 53.95,
+      "contract_share": 3.2,
+      "wallet_share": 10.07,
+      "committed_share": 74.13
     },
     "worst_day": {
       "date": "2025-10-10",
@@ -505,7 +595,7 @@ var DATA = {
       "date": "2026-01-18",
       "ret": 0.4943
     },
-    "generated": "2026-07-27 19:33 UTC",
+    "generated": "2026-07-27 19:42 UTC",
     "vol_ann": 1.1865,
     "ret_ann": -2.0655,
     "sharpe": -1.741,
@@ -9785,6 +9875,25 @@ var DATA = {
     tb+='</tbody></table></span></div>';
     var note='<div class="read" style="border-left-color:var(--up)"><b>As of June 2025 —</b> catalysts are real and sourced (North Star FIP-428; frxUSD/BUIDL via BlackRock/Securitize; GENIUS Act). Projected values are computed from the strategy’s payoff structure at the thesis price targets — <b>a projection, not realized</b>. What actually happened (the −'+Math.abs(Math.round(S.cumret*100))+'% drawdown, the diligence below) remains on this page unchanged; this section shows why the position was rational to open in the June-2025 context, not that it worked out.</div>';
     $("thesis").innerHTML=lead+d1+d2+d3+d4+d5+tb+note;
+  })();
+
+  // ── holder / wallet analysis ──
+  (function(){
+    var H=S.holders; if(!H||!H.rows){return;}
+    var kc={locked:'var(--up)',structural:'var(--blue)',contract:'var(--dim)',wallet:'var(--amber)'};
+    $("holdbar").innerHTML='<b>'+H.holders_count.toLocaleString()+' holders</b> · top-1 '+H.top1.toFixed(0)+'% · top-10 '+H.top10.toFixed(0)+'%. '+
+      '<span class="up">Locked veFXS '+H.locked_share.toFixed(0)+'%</span> · structural/bridge '+H.structural_share.toFixed(0)+'% · protocol '+H.contract_share.toFixed(0)+'% · '+
+      '<span class="amber">individual wallets '+H.wallet_share.toFixed(0)+'%</span> → <b>'+H.committed_share.toFixed(0)+'% non-liquid</b> (locked, migrated or protocol-held).';
+    var h='<table><thead><tr><th>#</th><th>Share</th><th>Type</th><th>Wallet / label</th><th>Address</th></tr></thead><tbody>';
+    H.rows.forEach(function(r,i){
+      h+='<tr><td class="dim">'+(i+1)+'</td><td class="tnum" style="color:'+(kc[r.kind]||'var(--amber)')+'">'+r.share.toFixed(2)+'%</td>'+
+         '<td style="color:'+(kc[r.kind]||'var(--amber)')+'">'+r.kind+'</td><td>'+r.label+'</td>'+
+         '<td class="dim" style="font-size:10px">'+r.addr.slice(0,10)+'…'+r.addr.slice(-4)+'</td></tr>';
+    });
+    $("holdwrap").innerHTML=h+'</tbody></table>';
+    $("holdread").innerHTML='<b>Confidence or exit? —</b> the observable structure <span class="up">leans confidence, not distribution</span>. '+
+      Math.round(H.locked_share)+'% is <b>vote-escrowed (veFXS)</b> — holders voluntarily locking up to 4 years, forgoing liquidity for governance/yield, a commitment signal; another '+Math.round(H.structural_share)+'% sits in the <b>Fraxtal-era system contract</b> (supply migrated to the L2, not sold). The largest <i>individual</i> wallet is only ~'+H.rows.filter(function(r){return r.kind==="wallet";})[0].share.toFixed(1)+'%, so no single whale can flush the market, and there is no concentration signature of insiders dumping. '+
+      '<b>Honest limits:</b> this is <b>Ethereum-only</b> — after North Star the active holder base moved to <b>Fraxtal</b>, which this source does not index; and it is a <b>snapshot, not a time series</b>, so it shows structure, not proven per-wallet accumulation vs exit. A rigorous flow (accumulation/distribution) read needs a Fraxtal indexer or a Nansen/Arkham/Dune key. (Source: Ethplorer, current.)';
   })();
 
   // ── fundamental valuation · P/F vs peers ──
