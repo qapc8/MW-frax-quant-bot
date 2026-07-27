@@ -11,7 +11,7 @@
   html,body{margin:0;background:var(--bg);color:var(--amber);font-family:var(--mono);font-size:12.5px;line-height:1.45;}
   .wrap{max-width:1280px;margin:0 auto;padding:0 10px 60px;}
   .tnum{font-variant-numeric:tabular-nums;}
-  .up{color:var(--up);} .down{color:var(--down);} .amb{color:var(--amber);} .org{color:var(--orange);} .dim{color:var(--dim);} .faint{color:var(--faint);} .blue{color:var(--blue);} .white{color:var(--white);}
+  .up{color:var(--up);} .down{color:var(--down);} .amb{color:var(--amber);} .org{color:var(--orange);} .dim{color:var(--dim);} .faint{color:var(--faint);} .blue{color:var(--blue);} .white{color:var(--white);} .mag{color:var(--mag);} .r{color:var(--down);font-weight:700;}
 
   /* command bar */
   .cmd{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#0a0906;border-bottom:2px solid var(--orange);padding:7px 10px;position:sticky;top:0;z-index:9;}
@@ -128,6 +128,11 @@
   <h2>Competitive positioning · Stablecoin-issuer vertical <span id="c-peers">—</span></h2>
   <div class="rangebar" id="rangebar">—</div>
   <div class="panel"><div class="cap"><span>Cumulative return: FRAX vs vertical basket</span><span id="cap-rel"></span></div><svg id="rel" viewBox="0 0 560 140"></svg></div>
+
+  <h2>Historical parallels · vertical base rates <span>every deep drawdown in the decentralized-stablecoin vertical (full exchange history) — recovery odds for a hold-through-drawdown / mean-reversion bet</span></h2>
+  <div class="rangebar" id="parbase">—</div>
+  <div class="tscroll" id="parwrap" style="margin-top:1px;max-height:none"></div>
+  <div class="brief" style="margin-top:1px;border-left-color:var(--down)"><div class="read" id="parread"></div></div>
 
   <h2>Event log</h2>
   <div class="log" id="events"></div>
@@ -326,6 +331,33 @@ var DATA = __DATA__;
       '<text x="'+x1+'" y="'+(Y(fr[fr.length-1])-3).toFixed(1)+'" text-anchor="end" font-size="9" fill="var(--amber)">FRAX '+sgn(S.cumret,0)+'</text>'+
       '<text x="'+x1+'" y="'+(Y(bk[bk.length-1])+10).toFixed(1)+'" text-anchor="end" font-size="9" fill="var(--blue)">VERT '+sgn(S.vertical_cum,0)+'</text>';
     $("cap-rel").textContent="alpha "+sgn(S.rel_final,0);
+  })();
+
+  // ── historical parallels / vertical base rates ──
+  (function(){
+    var P=S.parallels; if(!P){return;}
+    var b=P.base;
+    $("parbase").innerHTML='<b>Base rate —</b> '+b.n+' vertical tokens, median max drawdown <span class="r">'+pct(b.median_maxdd,0)+
+      '</span>, reclaimed prior ATH <span class="r">'+b.recovered+' / '+b.n+'</span>, all still underwater · worst '+pct(b.worst,0)+
+      '. Plus documented total losses (LUNA, TITAN). For a '+sgn(S.cumret,0)+' position betting on mean-reversion, the vertical’s historical reclaim rate is ≈0 and the left tail is total loss.';
+    var rows=P.rows.slice().sort(function(a,b){return a.maxdd-b.maxdd;});
+    var h='<table><thead><tr><th>Token</th><th>Hist since</th><th>Max DD</th><th>Trough</th><th>Recov→ATH</th><th>Cur DD</th><th>Days UW</th><th>Note</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      var self=r.token.indexOf('FRAX')>=0;
+      h+='<tr'+(self?' class="hi"':'')+'><td'+(self?' style="color:var(--amber)"':'')+'>'+r.token+'</td>'+
+         '<td class="dim tnum">'+r.hist_start+'</td><td class="tnum down">'+pct(r.maxdd,0)+'</td>'+
+         '<td class="dim tnum">'+r.trough_date+'</td><td class="'+(r.recovered?'up':'down')+'">'+(r.recovered?'yes ('+r.recover_days+'d)':'NO')+'</td>'+
+         '<td class="tnum down">'+pct(r.cur_dd,0)+'</td><td class="tnum">'+r.underwater_days+'</td>'+
+         '<td style="text-align:left;color:var(--dim);font-size:10px">'+(self?'this position’s token':'')+'</td></tr>';
+    });
+    P.zeros.forEach(function(z){
+      h+='<tr style="opacity:0.85"><td class="mag">'+z.token+'</td><td class="dim">cited</td>'+
+         '<td class="tnum down">'+pct(z.maxdd,0)+'</td><td class="dim">'+z.date+'</td>'+
+         '<td class="down">NO → $0</td><td class="tnum down">-100%</td><td class="dim">—</td>'+
+         '<td style="text-align:left;color:var(--dim);font-size:10px">'+z.note+'</td></tr>';
+    });
+    $("parwrap").innerHTML=h+'</tbody></table>';
+    $("parread").innerHTML='<b>Read —</b> the designed payoff assumes FRAX climbs to the $'+S.trigger.toFixed(2)+' trigger, i.e. a mean-reversion of the drawdown. But across the whole vertical, reclaiming prior highs after a &gt;90% drawdown has happened <b>0 of '+b.n+'</b> times in the exchange era, with a documented path to zero (Terra, Iron). A quant reads this as: <b>the recovery leg is the low-probability tail, not the base case</b> — which is why entry timing (into a falling vertical) and a thesis-invalidation exit dominate the P&amp;L, far more than the leverage multiple.';
   })();
 
   // ── exit-liquidity readout (today) ──

@@ -97,6 +97,51 @@ def _peer_index(ex, segments, entry_d, end_d):
     return idx
 
 
+# Cited left-tail outcomes in the decentralized-stablecoin vertical (pre-exchange-data;
+# well-documented). Real events, sourced — used as base-rate context, not fabricated.
+HISTORICAL_ZEROS = [
+    {"token": "LUNA / UST", "date": "May 2022", "maxdd": -0.999,
+     "note": "Terra algo-stablecoin depeg — ~$40B wiped, token → ~$0", "recovered": False},
+    {"token": "TITAN / IRON", "date": "Jun 2021", "maxdd": -1.0,
+     "note": "Iron Finance partial-algo bank run — TITAN ~$65 → ~$0 in a day", "recovered": False},
+]
+
+
+def _dd_stats(name, dates, levels):
+    """Drawdown + recovery stats for one token's price/return-index series."""
+    a = np.asarray(levels, float)
+    runmax = np.maximum.accumulate(a)
+    dd = a / runmax - 1
+    i_tr = int(dd.argmin()); maxdd = float(dd[i_tr]); peak = runmax[i_tr]
+    rec = next((j for j in range(i_tr, len(a)) if a[j] >= peak), None)
+    i_ath = int(a.argmax())
+    return {"token": name, "maxdd": round(maxdd, 3), "trough_date": dates[i_tr],
+            "recovered": rec is not None, "recover_days": (rec - i_tr if rec is not None else None),
+            "cur_dd": round(float(a[-1] / a.max() - 1), 3), "ath_date": dates[i_ath],
+            "underwater_days": len(a) - 1 - i_ath, "hist_start": dates[0]}
+
+
+def _parallels(ex):
+    """Real drawdown/recovery stats across the vertical over full exchange history."""
+    startd, endd = date(2023, 1, 1), date(2027, 1, 1)
+    out = []
+    fxs, _ = _stitch_frax(ex)
+    fxs = fxs[fxs["date"] >= startd]
+    out.append(_dd_stats("FRAX (FXS→)", list(fxs["date"].astype(str)), list(fxs["close"])))
+    for sym, segs in PEERS.items():
+        idx = _peer_index(ex, segs, startd, endd)
+        if not idx:
+            continue
+        ds = sorted(idx)
+        out.append(_dd_stats(sym, ds, [idx[d] for d in ds]))
+    mdd = [p["maxdd"] for p in out]
+    base = {"n": len(out), "median_maxdd": round(float(np.median(mdd)), 3),
+            "recovered": sum(1 for p in out if p["recovered"]),
+            "still_underwater": sum(1 for p in out if p["underwater_days"] > 0),
+            "worst": round(min(mdd), 3)}
+    return {"rows": out, "zeros": HISTORICAL_ZEROS, "base": base}
+
+
 def _basket(ex, entry_iso, end_iso):
     """Equal-weight stablecoin-issuer basket, each peer rebased to entry."""
     entry_d = date.fromisoformat(entry_iso); end_d = date.fromisoformat(end_iso)
@@ -219,6 +264,7 @@ def build_log(cfg, entry_iso, end_iso):
     eth = _fetch(ex, "ETH/USDT")
     eth_close = dict(zip(eth["date"].astype(str), eth["close"]))
     basket = _basket(ex, entry_iso, end_iso)
+    parallels = _parallels(ex)
 
     end_d = date.fromisoformat(end_iso)
     df = df[df["date"] <= end_d].reset_index(drop=True)
@@ -368,6 +414,7 @@ def build_log(cfg, entry_iso, end_iso):
                "exit_net": last["exit_net"], "exit_days": last["exit_days"],
                "leverage": cfg["strategy"]["leverage"], "house_stop_frac": cfg["strategy"]["house_stop_frac"],
                "lev_target_mult": cfg["strategy"].get("leverage_target_mult"), "macro": macro,
+               "parallels": parallels,
                "worst_day": {"date": worst["date"], "ret": worst["day_ret"]},
                "best_day": {"date": best["date"], "ret": best["day_ret"]},
                "generated": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")}
