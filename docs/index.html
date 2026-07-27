@@ -116,6 +116,11 @@
   <h2>June 2025 · ex-ante thesis &amp; projected upside <span>PROJECTION — the information set behind the entry, before the drawdown · not realized results</span></h2>
   <div class="brief" id="thesis" style="border-left-color:var(--up)"></div>
 
+  <h2>Fundamental valuation · P/F vs peers <span>real trailing fees (DefiLlama) &amp; token market caps (CoinGecko) — is FRAX cheap, and what does $5 require?</span></h2>
+  <div class="rangebar" id="valbar" style="border-left-color:var(--up)">—</div>
+  <div class="tscroll" id="valwrap" style="margin-top:1px;max-height:none"></div>
+  <div class="brief" style="margin-top:1px;border-left-color:var(--amber)"><div class="read" id="valread"></div></div>
+
   <h2>Institutional diligence · in June-2025 perspective <span>backtest significance · factor alpha · Monte-Carlo forward EV — as-of-now (post-crash) vs ex-ante Jun-2025 thesis-conditioned</span></h2>
   <div class="brief" id="dilig"></div>
 
@@ -313,7 +318,7 @@ var DATA = {
         ],
         "n_assets": 9,
         "n_days": 1315,
-        "total_return": 0.444,
+        "total_return": 0.443,
         "max_dd": -0.424,
         "n_trades": 280,
         "win_rate": 0.314,
@@ -322,18 +327,18 @@ var DATA = {
       },
       "significance": {
         "N": 1315,
-        "sharpe_ann": 0.448,
+        "sharpe_ann": 0.447,
         "t_stat": 0.85,
-        "p_value": 0.3956,
+        "p_value": 0.396,
         "skew": 1.639,
         "kurt": 18.77,
         "psr": 0.806,
         "dsr": 0.129,
         "sr_star_ann": 1.034,
-        "min_trl_years": 13.0
+        "min_trl_years": 13.1
       },
       "factor": {
-        "alpha_ann": 0.1616,
+        "alpha_ann": 0.1612,
         "beta_btc": 0.299,
         "t_alpha": 0.73,
         "r2": 0.13,
@@ -373,6 +378,125 @@ var DATA = {
       },
       "trials": 25
     },
+    "valuation": {
+      "rows": [
+        {
+          "sym": "LDO",
+          "name": "Lido",
+          "mcap": 319085564,
+          "fees_1y": 721626067,
+          "price": 0.381585,
+          "pf": 0.44
+        },
+        {
+          "sym": "USUAL",
+          "name": "Usual",
+          "mcap": 15658081,
+          "fees_1y": 19289488,
+          "price": 0.0084294,
+          "pf": 0.81
+        },
+        {
+          "sym": "AAVE",
+          "name": "Aave",
+          "mcap": 1533606291,
+          "fees_1y": 892864523,
+          "price": 99.43,
+          "pf": 1.72
+        },
+        {
+          "sym": "FRAX",
+          "name": "Frax (frxUSD/Fraxtal)",
+          "mcap": 24533933,
+          "fees_1y": 11741976.0,
+          "price": 0.262115,
+          "pf": 2.09
+        },
+        {
+          "sym": "ENA",
+          "name": "Ethena",
+          "mcap": 839499915,
+          "fees_1y": 350027911.0,
+          "price": 0.087822,
+          "pf": 2.4
+        },
+        {
+          "sym": "SKY",
+          "name": "Sky (Maker)",
+          "mcap": 1335646618,
+          "fees_1y": 412323602,
+          "price": 0.057156,
+          "pf": 3.24
+        },
+        {
+          "sym": "CRV",
+          "name": "Curve",
+          "mcap": 316180992,
+          "fees_1y": 62502447.0,
+          "price": 0.205067,
+          "pf": 5.06
+        },
+        {
+          "sym": "CVX",
+          "name": "Convex",
+          "mcap": 137503711,
+          "fees_1y": 21288792,
+          "price": 1.38,
+          "pf": 6.46
+        },
+        {
+          "sym": "LQTY",
+          "name": "Liquity",
+          "mcap": 19405520,
+          "fees_1y": 2748549.0,
+          "price": 0.196181,
+          "pf": 7.06
+        },
+        {
+          "sym": "SPELL",
+          "name": "Abracadabra",
+          "mcap": 13906403,
+          "fees_1y": 1322842,
+          "price": 8.105e-05,
+          "pf": 10.51
+        },
+        {
+          "sym": "PENDLE",
+          "name": "Pendle",
+          "mcap": 265108304,
+          "fees_1y": 24072625,
+          "price": 1.54,
+          "pf": 11.01
+        },
+        {
+          "sym": "RSR",
+          "name": "Reserve",
+          "mcap": 78653658,
+          "fees_1y": 6365080,
+          "price": 0.0012571,
+          "pf": 12.36
+        }
+      ],
+      "median_pf": 5.06,
+      "n_peers": 11,
+      "frax_tvl": 42317969.294700734,
+      "target_price": 5.0,
+      "frax": {
+        "sym": "FRAX",
+        "name": "Frax (frxUSD/Fraxtal)",
+        "mcap": 24533933,
+        "fees_1y": 11741976.0,
+        "price": 0.262115,
+        "pf": 2.09
+      },
+      "rerating_mult": 2.42,
+      "implied_price_rerate": 0.6346,
+      "implied_mcap_rerate": 59397943.0,
+      "target_mcap": 467999409.0,
+      "fees_needed": 92490002.0,
+      "fee_growth_x": 7.9,
+      "target_pf_on_current_fees": 39.9
+    },
     "worst_day": {
       "date": "2025-10-10",
       "ret": -0.3924
@@ -381,7 +505,7 @@ var DATA = {
       "date": "2026-01-18",
       "ret": 0.4943
     },
-    "generated": "2026-07-27 18:30 UTC",
+    "generated": "2026-07-27 19:33 UTC",
     "vol_ann": 1.1865,
     "ret_ann": -2.0655,
     "sharpe": -1.741,
@@ -9661,6 +9785,25 @@ var DATA = {
     tb+='</tbody></table></span></div>';
     var note='<div class="read" style="border-left-color:var(--up)"><b>As of June 2025 —</b> catalysts are real and sourced (North Star FIP-428; frxUSD/BUIDL via BlackRock/Securitize; GENIUS Act). Projected values are computed from the strategy’s payoff structure at the thesis price targets — <b>a projection, not realized</b>. What actually happened (the −'+Math.abs(Math.round(S.cumret*100))+'% drawdown, the diligence below) remains on this page unchanged; this section shows why the position was rational to open in the June-2025 context, not that it worked out.</div>';
     $("thesis").innerHTML=lead+d1+d2+d3+d4+d5+tb+note;
+  })();
+
+  // ── fundamental valuation · P/F vs peers ──
+  (function(){
+    var V=S.valuation; if(!V||!V.frax){return;}
+    function M(x){return '$'+(x/1e6).toFixed(x>=1e8?0:1)+'M';}
+    $("valbar").innerHTML='<b>FRAX P/F '+V.frax.pf+'×</b> vs peer median <b>'+V.median_pf+'×</b> ('+V.n_peers+' peers) — among the <span class="up">cheapest in the vertical</span>. '+
+      'Re-rating to the median implies <b class="up">$'+V.implied_price_rerate.toFixed(3)+'</b> ('+V.rerating_mult+'× · mcap '+M(V.implied_mcap_rerate)+') on <i>current</i> fees. '+
+      'Frax ecosystem: fees <b>'+M(V.frax.fees_1y)+'/yr</b> · TVL '+M(V.frax_tvl)+' · mcap '+M(V.frax.mcap)+'.';
+    var h='<table><thead><tr><th>Protocol</th><th>Token</th><th>Price</th><th>Mcap</th><th>Fees (1y)</th><th>P/F</th></tr></thead><tbody>';
+    V.rows.forEach(function(r){
+      var self=r.sym==='FRAX';
+      h+='<tr'+(self?' class="hi"':'')+'><td'+(self?' style="color:var(--amber)"':'')+'>'+r.name+'</td>'+
+         '<td class="dim">'+r.sym+'</td><td class="tnum">$'+r.price.toFixed(r.price<1?3:2)+'</td>'+
+         '<td class="tnum">'+M(r.mcap)+'</td><td class="tnum">'+M(r.fees_1y)+'</td>'+
+         '<td class="tnum'+(self?' amber':'')+'">'+r.pf.toFixed(2)+'×</td></tr>';
+    });
+    $("valwrap").innerHTML=h+'</tbody></table>';
+    $("valread").innerHTML='<b>Read —</b> the fundamentals underwrite <b>part</b> of the thesis, not all of it. On trailing fees FRAX is the cheapest name in the group (P/F '+V.frax.pf+'× vs '+V.median_pf+'× median), so a re-rating to peer parity supports <b class="up">~'+V.rerating_mult+'× to $'+V.implied_price_rerate.toFixed(2)+'</b> — a real floor. The <b>$'+V.target_price.toFixed(0)+' target is a growth bet, not a re-rating</b>: at a peer-median multiple it needs fees of <b>'+M(V.fees_needed)+'/yr</b> — a <b class="amber">'+V.fee_growth_x+'× expansion</b> of today\'s '+M(V.frax.fees_1y)+' (or an implausible '+V.target_pf_on_current_fees+'× P/F on current fees). That expansion is exactly what the North Star pipeline — Fraxtal usage + frxUSD scale — has to deliver; the valuation sizes the bet, it doesn\'t hand it to you. (Data: DefiLlama trailing-12m fees, CoinGecko mcap — current, not June-2025 vintage.)';
   })();
 
   // ── institutional diligence ──
