@@ -1,0 +1,18 @@
+# Runtime artifacts
+state.json
+bot.log
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Secrets / local overrides
+.env
+*.local.yaml
+
+# OS
+.DS_Store

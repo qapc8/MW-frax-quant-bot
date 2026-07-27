@@ -1,0 +1,71 @@
+# ── Frax Quant Bot configuration ───────────────────────────────────────────
+
+exchange:
+  id: binance            # any ccxt-supported exchange id
+  symbol: FXS/USDT       # NOTE: FRAX is a $1 stablecoin. It has no upside trend.
+                         # Use FXS (Frax Share) for a token that actually moves.
+  timeframe: 4h
+  api_key: ""            # only needed when engine.live: true. Prefer env vars:
+  secret: ""             #   export FMB_API_KEY=...  export FMB_SECRET=...
+
+# ── Your price thesis ───────────────────────────────────────────────────────
+# These are USER-SUPPLIED ASSUMPTIONS, not sourced forecasts. FRAX is a
+# stablecoin, so treat $3/$5 as hypothetical. The bot uses them only to (a)
+# gate exposure to "on-thesis" conditions and (b) scale conviction — it never
+# assumes they will happen.
+thesis:
+  target_1_price: 3.0
+  target_1_date: "2025-07-31"
+  target_2_price: 5.0
+  target_2_date: "2026-12-31"
+  require_on_thesis: true   # if true, only enter while price is at/above the
+                            # thesis trajectory (interpolated target path)
+
+# ── Multi-factor signal gate ────────────────────────────────────────────────
+# A weighted composite of momentum + TVL + social + news must exceed the
+# trigger_threshold, OR THE ALGO DOES NOT TRIGGER. Factors with no configured
+# data source contribute a neutral 0.5 (never fabricated values).
+signals:
+  trigger_threshold: 0.60
+  weights:
+    momentum: 0.40
+    tvl: 0.20
+    social: 0.20
+    news: 0.20
+  tvl:
+    provider: defillama     # real API (api.llama.fi). Set to "none" to disable.
+    protocol: frax
+    lookback_days: 14
+    up_pct_for_full: 15.0   # +15% TVL over the window scores 1.0
+  social:
+    provider: none          # none | lunarcrush   (key via env FMB_SOCIAL_KEY)
+  news:
+    provider: none          # none | cryptopanic  (key via env FMB_NEWS_KEY)
+
+# ── Momentum sub-signal (feeds the composite) ───────────────────────────────
+momentum:
+  ema_fast: 12
+  ema_slow: 26
+  rsi_period: 14
+  rsi_min: 45
+  rsi_max: 82
+  roc_period: 10
+
+# ── Core strategy: 2x, then leverage the house money ────────────────────────
+strategy:
+  double_target: 2.0        # bank principal once position value reaches this multiple
+  spot_stop_pct: 0.12       # protective stop on the initial spot leg
+  leverage: 3.0             # leverage applied to PROFITS (house money) after 2x
+  leverage_target_mult: 2.0 # optional take-profit on the leveraged leg (x on margin)
+  house_stop_frac: 0.50     # stop the leveraged leg after losing this fraction of house money
+  trailing_stop_pct: 0.08   # trailing stop on the leveraged leg (0 to disable)
+
+risk:
+  quote_balance: 1000.0     # starting paper balance (quote currency)
+  entry_alloc_pct: 0.90     # fraction of free quote deployed on the initial entry
+
+engine:
+  live: false               # false = paper trading (no real orders / no real leverage)
+  poll_seconds: 14400
+  state_file: state.json
+  log_file: bot.log
