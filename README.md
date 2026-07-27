@@ -75,6 +75,27 @@ stays dormant until price first reaches your `avg_entry`, so a position seeded
 above the current market is *held* (not instantly stopped) while it waits for
 the thesis to play out. Once price reaches entry, the stop goes live.
 
+## Monitoring & analytics (`monitor.py`)
+
+`monitor.py` builds a daily mark-to-market log for the seeded position from **real**
+FXS→FRAX candles (ticker migration handled) and computes a full quant layer:
+
+- Risk/return: annualized vol, Sharpe/Sortino, VaR/CVaR, skew/kurtosis, max
+  drawdown + duration, MFE/MAE, rolling 30d vol, beta/corr vs BTC.
+- **Competitive positioning** vs a like-for-like *stablecoin-issuer vertical*
+  (ENA, MKR/SKY, CRV, AAVE, LQTY, SPELL, RSR, USUAL) — relative alpha, rank,
+  per-peer perf & Sharpe.
+- **Exit-liquidity/slippage** per day (square-root market-impact law on real volume).
+- **Macro-event overlay** — real dated crypto-macro shocks contextualizing drops.
+- A per-day AI-agent HOLD rationale.
+
+```bash
+python monitor.py --entry 2025-07-13 --end 2026-07-24   # prints log + writes monitor_log.json
+```
+
+The Bloomberg-style dashboard in `docs/index.html` is built from that output
+(strategy quant brief, payoff diagram + scenario table, and the daily log).
+
 ## Setup
 
 ```bash

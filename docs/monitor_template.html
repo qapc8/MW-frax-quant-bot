@@ -1,0 +1,367 @@
+<title>MW-QB · FRAX Position Monitor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#000000; --panel:#080806; --panel2:#0c0b07; --line:#3a3320; --line2:#4a4022;
+    --amber:#ffb000; --orange:#ff8c1a; --dim:#9a854a; --faint:#6b5d34; --white:#efe9dc;
+    --up:#33d17a; --down:#ff5c57; --blue:#5c9ded; --mag:#e57ad6;
+    --mono:"SF Mono","JetBrains Mono","Cascadia Code",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--amber);font-family:var(--mono);font-size:12.5px;line-height:1.45;}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 10px 60px;}
+  .tnum{font-variant-numeric:tabular-nums;}
+  .up{color:var(--up);} .down{color:var(--down);} .amb{color:var(--amber);} .org{color:var(--orange);} .dim{color:var(--dim);} .faint{color:var(--faint);} .blue{color:var(--blue);} .white{color:var(--white);}
+
+  /* command bar */
+  .cmd{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#0a0906;border-bottom:2px solid var(--orange);padding:7px 10px;position:sticky;top:0;z-index:9;}
+  .cmd .go{background:var(--amber);color:#000;font-weight:800;padding:2px 8px;letter-spacing:0.06em;}
+  .cmd .sym{color:var(--white);font-weight:700;letter-spacing:0.04em;}
+  .cmd .t{color:var(--dim);}
+  .cmd .last{margin-left:auto;color:var(--white);font-weight:700;}
+  .cmd .chg{font-weight:700;}
+  .blink{color:var(--orange);animation:bl 1.1s step-end infinite;}
+  @keyframes bl{50%{opacity:0;}}
+  @media (prefers-reduced-motion: reduce){.blink{animation:none;}}
+  .fkeys{display:flex;gap:16px;flex-wrap:wrap;background:#060503;border-bottom:1px solid var(--line);padding:5px 10px;font-size:11px;color:var(--blue);}
+  .fkeys b{color:var(--faint);}
+
+  h2{font-size:11px;letter-spacing:0.05em;font-weight:700;color:#000;background:var(--orange);
+     padding:3px 8px;margin:22px 0 0;display:flex;justify-content:space-between;}
+  h2 span{font-weight:400;color:#2a1800;}
+
+  .grid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);}
+  .g6{grid-template-columns:repeat(6,1fr);} .g8{grid-template-columns:repeat(8,1fr);}
+  .grid .c{background:var(--panel);padding:7px 9px;}
+  .grid .k{font-size:9.5px;letter-spacing:0.04em;color:var(--blue);text-transform:uppercase;}
+  .grid .v{font-size:14px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums;color:var(--white);}
+  .grid .s{font-size:9.5px;color:var(--dim);margin-top:1px;}
+
+  .panel{background:var(--panel);border:1px solid var(--line);padding:10px;}
+  .charts2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);}
+  .cap{font-size:10px;color:var(--blue);margin-bottom:4px;display:flex;justify-content:space-between;text-transform:uppercase;letter-spacing:0.04em;}
+  .cap span:last-child{color:var(--dim);}
+  svg{display:block;width:100%;height:auto;}
+
+  .ctx{background:#060a0d;border:1px solid var(--line);border-left:3px solid var(--blue);}
+  .ctx .row{display:flex;gap:12px;padding:8px 11px;border-bottom:1px solid var(--line);font-size:11.5px;line-height:1.55;}
+  .ctx .row:last-child{border-bottom:none;}
+  .ctx .lb{width:118px;flex:none;color:var(--blue);text-transform:uppercase;letter-spacing:0.04em;font-size:10px;padding-top:2px;}
+  .ctx .tx{color:var(--amber);} .ctx .tx b{color:var(--white);}
+  .brief{background:#080806;border:1px solid var(--line);border-left:3px solid var(--amber);}
+  .brief .lead{color:var(--white);padding:11px 12px 8px;font-size:12px;line-height:1.55;}
+  .brief .lead b{color:var(--amber);}
+  .brief .row{display:flex;gap:12px;padding:7px 12px;border-top:1px solid var(--line);font-size:11.5px;line-height:1.5;}
+  .brief .lb{width:92px;flex:none;color:var(--blue);text-transform:uppercase;letter-spacing:0.04em;font-size:10px;padding-top:2px;}
+  .brief .tx{color:var(--amber);} .brief .tx b{color:var(--white);}
+  .brief .read{border-top:1px solid var(--line);border-left:2px solid var(--down);background:#140f04;padding:8px 12px;color:var(--dim);font-size:11.5px;}
+  .brief .read b{color:var(--amber);}
+  .macleg{display:flex;flex-wrap:wrap;gap:6px 16px;padding:8px 10px;margin-top:1px;background:#060a0d;border:1px solid var(--line);border-left:3px solid var(--blue);font-size:10.5px;color:var(--dim);}
+  .macleg .me b{display:inline-block;min-width:14px;height:14px;line-height:14px;text-align:center;background:var(--blue);color:#000;border-radius:3px;font-size:9px;margin-right:5px;}
+  .rangebar{background:#140f04;border:1px solid var(--line);border-left:3px solid var(--down);padding:6px 10px;font-size:11.5px;color:var(--amber);margin-top:1px;}
+  .rangebar b{color:var(--white);} .rangebar .r{color:var(--down);font-weight:700;}
+  .log{background:var(--panel2);border:1px solid var(--line);padding:6px 9px;max-height:150px;overflow:auto;}
+  .log .e{display:flex;gap:10px;padding:2px 0;font-size:11.5px;}
+  .log .e .dt{color:var(--faint);flex:none;width:82px;} .log .e .kind{flex:none;width:96px;font-weight:700;}
+  .log .e .msg{color:var(--dim);}
+  .k-ENTRY{color:var(--amber);} .k-SIGNAL_HIGH{color:var(--orange);} .k-DRAWDOWN{color:var(--down);} .k-TICKER{color:var(--mag);}
+
+  .tscroll{border:1px solid var(--line);overflow:auto;max-height:640px;}
+  table{border-collapse:collapse;width:100%;font-size:11.5px;table-layout:auto;}
+  thead th{position:sticky;top:0;background:#1a1408;color:var(--orange);font-weight:700;font-size:9.5px;
+           letter-spacing:0.04em;text-align:right;padding:5px 9px;border-bottom:1px solid var(--line2);white-space:nowrap;}
+  thead th:first-child,thead th:last-child{text-align:left;}
+  td{text-align:right;padding:3px 9px;border-bottom:1px solid rgba(255,176,0,0.05);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--amber);}
+  td:first-child{text-align:left;color:var(--dim);}
+  td.note{text-align:left;white-space:normal;min-width:400px;color:var(--white);font-size:11px;line-height:1.4;}
+  tbody tr:hover{background:rgba(255,176,0,0.06);}
+  .tkr{font-size:9px;padding:0 4px;border:1px solid var(--faint);color:var(--dim);border-radius:2px;}
+  .tkr.FRAX{color:var(--mag);border-color:var(--mag);}
+  .hi td{background:rgba(255,140,26,0.08);}
+
+  .foot{margin-top:18px;color:var(--faint);font-size:10.5px;line-height:1.7;max-width:104ch;}
+  @media (max-width:900px){ .g6,.g8{grid-template-columns:repeat(3,1fr);} .charts2{grid-template-columns:1fr;} td.note{min-width:260px;} }
+</style>
+
+<div class="wrap">
+  <div class="cmd">
+    <span class="go">MW-QB&nbsp;&lt;GO&gt;</span>
+    <span class="sym" id="c-sym">—</span>
+    <span class="t">POSITION MONITOR</span>
+    <span class="t" id="c-range">—</span>
+    <span class="last" id="c-last">—</span>
+    <span class="chg" id="c-chg">—</span>
+    <span class="blink">■</span>
+  </div>
+  <div class="fkeys">
+    <span><b>1)</b> Summary</span><span><b>2)</b> Analytics</span><span><b>3)</b> Charts</span>
+    <span><b>4)</b> Agent Log</span><span style="margin-left:auto;color:var(--faint)" id="c-gen">—</span>
+  </div>
+
+  <h2>Position summary <span id="c-phase">—</span></h2>
+  <div class="grid g6" id="summary"></div>
+
+  <h2>Position in context <span>unrealized · unlevered · sector-relative — the loss in fuller framing, beside the headline not instead of it</span></h2>
+  <div class="ctx" id="ctx"></div>
+
+  <h2>Strategy · quant brief <span>classification · payoff · signal · parameters · realized scorecard</span></h2>
+  <div class="brief" id="brief"></div>
+
+  <h2>Payoff structure · designed P&amp;L vs terminal price <span>long spot + self-financed levered call-spread — structure never armed (price never reached the trigger)</span></h2>
+  <div class="charts2">
+    <div class="panel"><div class="cap"><span>P&amp;L ($) vs FRAX price</span><span id="cap-pay"></span></div><svg id="payoff" viewBox="0 0 560 200"></svg></div>
+    <div class="panel"><div class="cap"><span>Scenario table</span><span id="cap-scn"></span></div><div id="scn"></div></div>
+  </div>
+
+  <h2>Risk / return analytics <span>daily log-ret · ann √365 · rf=0 · beta vs BTC</span></h2>
+  <div class="grid g8" id="stats"></div>
+
+  <h2>Price / drawdown / distribution / vol <span>numbered markers = dated macro/crypto shocks (see legend below)</span></h2>
+  <div class="charts2">
+    <div class="panel"><div class="cap"><span>Last (FXS→FRAX)</span><span id="cap-px"></span></div><svg id="px" viewBox="0 0 560 140"></svg></div>
+    <div class="panel"><div class="cap"><span>Drawdown from HWM</span><span id="cap-dd"></span></div><svg id="dd" viewBox="0 0 560 140"></svg></div>
+    <div class="panel"><div class="cap"><span>Daily return dist.</span><span id="cap-hist"></span></div><svg id="hist" viewBox="0 0 560 140"></svg></div>
+    <div class="panel"><div class="cap"><span>Rolling 30d vol (ann)</span><span id="cap-vol"></span></div><svg id="vol" viewBox="0 0 560 140"></svg></div>
+  </div>
+  <div class="macleg" id="macleg"></div>
+
+  <h2>Competitive positioning · Stablecoin-issuer vertical <span id="c-peers">—</span></h2>
+  <div class="rangebar" id="rangebar">—</div>
+  <div class="panel"><div class="cap"><span>Cumulative return: FRAX vs vertical basket</span><span id="cap-rel"></span></div><svg id="rel" viewBox="0 0 560 140"></svg></div>
+
+  <h2>Event log</h2>
+  <div class="log" id="events"></div>
+
+  <h2>Daily agent log <span>entry → date · HOLD every day · exit-liquidity &amp; slippage per row</span></h2>
+  <div class="ctx" id="exitbar" style="border-left-color:var(--blue);margin-bottom:1px"></div>
+  <div class="tscroll">
+    <table>
+      <thead><tr>
+        <th>Date</th><th>Tk</th><th>Last</th><th>Chg%</th><th>Mom</th><th>Conv</th>
+        <th>&Delta;Arm</th><th>Value</th><th>uPnL</th><th>Cum%</th><th>Vert%</th><th>&alpha;Vert</th><th>ADV$</th><th>Exit/ADV</th><th>ExitSlip%</th><th>NetExit$</th><th>AI-Agent rationale — why unchanged</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+var DATA = __DATA__;
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var S=DATA.summary, R=DATA.rows, E=DATA.events;
+  function money(v){var a=Math.abs(v),sg=v<0?"-":"";
+    if(a>=1e6)return sg+"$"+(a/1e6).toFixed(2)+"M"; if(a>=1e3)return sg+"$"+(a/1e3).toFixed(1)+"k"; return sg+"$"+a.toFixed(0);}
+  function pct(v,d){return (v*100).toFixed(d==null?1:d)+"%";}
+  function sgn(v,d){return (v>=0?"+":"")+(v*100).toFixed(d==null?1:d)+"%";}
+  function num(v,d){return v==null?"—":v.toFixed(d==null?2:d);}
+  function cls(v){return v>0?"up":v<0?"down":"dim";}
+
+  $("c-sym").textContent=S.symbol;
+  $("c-range").textContent=S.entry_date+" → "+S.last_date;
+  $("c-last").textContent="LAST "+S.last_close.toFixed(4)+" "+S.last_ticker;
+  var chg=S.cumret; $("c-chg").className="chg "+cls(chg); $("c-chg").textContent=sgn(chg)+" CUM";
+  $("c-gen").textContent="GEN "+S.generated;
+  $("c-phase").textContent="phase "+S.phase+" · leverage NOT armed · principal stop NONE";
+
+  var cells=[
+    ["Entry / cost","$"+S.entry_px.toFixed(2),money(S.cost_basis)+" · "+S.amount.toLocaleString()+"u",""],
+    ["Last","$"+S.last_close.toFixed(4),S.last_date+" "+S.last_ticker,cls(S.last_close-S.entry_px)],
+    ["Value",money(S.value),"mark-to-market",""],
+    ["Unreal PnL",money(S.upnl),sgn(S.cumret),cls(S.upnl)],
+    ["Δ to arm",sgn(S.dist_trigger,0),"arm $"+S.trigger.toFixed(2),"org"],
+    ["Composite",S.last_conv.toFixed(2),"gate ≥ "+S.threshold.toFixed(2),(S.last_conv>=S.threshold?"org":"dim")],
+    ["MFE peak",sgn(S.mfe),"px ~$3.77 (+6d)","up"],
+    ["MAE trough",sgn(S.mae),"","down"],
+    ["Max DD",pct(S.max_dd),S.max_dd_duration+"d · "+S.max_dd_date,"down"],
+    ["Time underwater",pct(S.time_underwater),"below HWM","dim"],
+    ["Best / worst day",sgn(S.best_day.ret)+" / "+sgn(S.worst_day.ret),"","dim"],
+    ["Ticker split",S.ticker_split,"FXS→FRAX","mag"]
+  ];
+  $("summary").innerHTML=cells.map(function(c){return '<div class="c"><div class="k">'+c[0]+'</div><div class="v '+c[3]+'">'+c[1]+'</div><div class="s">'+c[2]+'</div></div>';}).join("");
+
+  // ── position in context (honest framings that soften the raw USD print) ──
+  (function(){
+    function Row(l,t){return '<div class="row"><span class="lb">'+l+'</span><span class="tx">'+t+'</span></div>';}
+    $("ctx").innerHTML=
+      Row("Status","<b>Unrealized</b> mark-to-market — not a realized loss. <b>Unlevered</b>: the $"+S.trigger.toFixed(2)+" arm never triggered, so no leverage, no liquidation, no amplification — the "+sgn(S.cumret,0)+" is the plain spot mark. Recoverable only if price reclaims; not guaranteed.")+
+      Row("Sector-relative","Of the <b>"+sgn(S.cumret,0)+"</b> USD draw, <b>"+sgn(S.beta_part,0)+"</b> is the stablecoin-vertical average (market beta) and only <b>"+sgn(S.idio_part,0)+"</b> is FRAX-specific. Beta-adjusted, the trade is a "+sgn(S.idio_part,0)+" miss vs peers, not "+sgn(S.cumret,0)+" in isolation.");
+  })();
+
+  // ── strategy quant brief ──
+  (function(){
+    function R(l,t){return '<div class="row"><span class="lb">'+l+'</span><span class="tx">'+t+'</span></div>';}
+    var N=S.amount, C=S.cost_basis, K=S.trigger, E0=S.entry_px, lev=S.leverage, hs=Math.round(S.house_stop_frac*100);
+    var tm=K/E0, H=N*K-C, nL=lev*H/K, Stp=K*(1+((S.lev_target_mult||2)-1)/lev), liq=K*(1-1/lev), floorEq=C+H*(1-S.house_stop_frac);
+    var lead='<div class="lead"><b>Long-only, signal-gated momentum with a staged house-money pyramid.</b> A discretionary-conviction spot entry wrapped in a systematic convexity overlay: accumulate spot, then finance a leveraged continuation out of realized P&amp;L once an absolute price trigger confirms the move.</div>';
+    var mech=R("Mechanic","<b>IDLE → SPOT → HOUSE.</b> Gate: deploy only when composite conviction ≥ "+S.threshold.toFixed(2)+" and price is on-thesis. Phase 1 (SPOT): unit-delta spot, <b>"+S.amount.toLocaleString()+"</b> @ $"+S.entry_px.toFixed(2)+" ("+money(S.cost_basis)+"). Phase 2 (HOUSE): at the $"+S.trigger.toFixed(2)+" trigger ("+tm.toFixed(2)+"× entry) realize the spot leg, <b>bank principal to cash</b>, redeploy realized P&amp;L at <b>"+lev+"×</b>.");
+    var payoff=R("Payoff","Piecewise-convex. Below trigger: linear, δ≈1 to token (β "+num(S.beta_btc)+" BTC · "+num(S.beta_vert)+" vertical). At trigger: principal → cash (capital-at-risk capped at pre-trigger P&amp;L) and profit re-enters at "+lev+"× → net delta steps up on <b>house money only</b>. Shape ≈ long spot + a self-financed call-spread; tail confined to the levered leg, stopped at "+hs+"% of house above liquidation.");
+    var struct=R("Structure","V(S) = N·S for S&lt;K; = C + H(3S/K − 2) for K ≤ S ≤ TP; capped above TP. Read as <b>long spot + a self-financed "+lev+"× call-spread</b> struck [K $"+K.toFixed(2)+" → TP $"+Stp.toFixed(2)+"]. H = N·K − C = <b>"+money(H)+"</b> (house money); leg base n_L = "+lev+"H/K = "+Math.round(nL).toLocaleString()+" ("+(nL/N).toFixed(2)+"×N).");
+    var greeks=R("Greeks","$-delta steps <b>N → "+(nL/N).toFixed(2)+"·N</b> at K (Γ concentrated at the kink). Banking principal at K converts a <b>+"+Math.round((K/E0-1)*100)+"%</b> unrealized into cash + house; the post-trigger house-stop <b>floors the outcome at +"+Math.round((floorEq/C-1)*100)+"%</b>; levered-leg liquidation $"+liq.toFixed(2)+".");
+    var sig=R("Signal","composite = 0.40·momentum + 0.20·TVL + 0.20·social + 0.20·news, gate ≥ "+S.threshold.toFixed(2)+". Momentum from price/EMA/RSI/ROC; TVL (DefiLlama) &amp; social/news pluggable, neutral 0.50 without a feed.");
+    var par=R("Params","entry <b>$"+S.entry_px.toFixed(2)+"</b> · size <b>"+S.amount.toLocaleString()+"</b> · trigger <b>$"+S.trigger.toFixed(2)+"</b> ("+tm.toFixed(2)+"×) · leverage <b>"+lev+"×</b> · house stop <b>"+hs+"%</b> · principal stop <b>none</b> · gate <b>"+S.threshold.toFixed(2)+"</b>");
+    var score=R("Scorecard","cum <span class='down'>"+sgn(S.cumret,0)+"</span> · annVol "+pct(S.vol_ann,0)+" · Sharpe "+num(S.sharpe)+" · Sortino "+num(S.sortino)+" · maxDD "+pct(S.max_dd)+" ("+S.max_dd_duration+"d) · β(BTC) "+num(S.beta_btc)+" · β(vert) "+num(S.beta_vert)+" · MFE "+sgn(S.mfe,0)+" / MAE "+sgn(S.mae,0)+" · rank #"+S.frax_rank+"/"+(S.n_peers+1));
+    var read='<div class="read"><b>Read —</b> the convexity never armed: the trigger sat '+tm.toFixed(2)+'× above entry and price fell instead, so the structure degenerated into a plain unlevered long with no exit rule. Realized: negative risk-adjusted return (Sharpe '+num(S.sharpe)+'), high-beta to a falling sector, bottom-quartile idiosyncratic ('+sgn(S.idio_part,0)+' vs vertical). The overlay only pays in an up-regime that reaches the trigger; in a down-regime it carries no downside control — that was deferred to a leverage stage never reached.</div>';
+    $("brief").innerHTML=lead+mech+payoff+struct+greeks+sig+par+score+read;
+  })();
+
+  // ── payoff diagram + scenario table ──
+  (function(){
+    var N=S.amount, C=S.cost_basis, K=S.trigger, E0=S.entry_px, lev=S.leverage;
+    var H=N*K-C, Stp=K*(1+((S.lev_target_mult||2)-1)/lev);
+    function spotPL(s){return N*s - C;}
+    function stratPL(s){ if(s<K) return N*s - C; return (C+H+lev*H*(Math.min(s,Stp)/K-1))-C; }
+    var Smax=8, x0=48,x1=550,yt=14,yb=180;
+    var xs=[],sp=[],st=[]; for(var i=0;i<=96;i++){var s=Smax*i/96; xs.push(s); sp.push(spotPL(s)); st.push(stratPL(s));}
+    var ay=sp.concat(st), ymn=Math.min.apply(null,ay), ymx=Math.max.apply(null,ay);
+    var X=function(s){return x0+(s/Smax)*(x1-x0);}, Y=function(v){return yb-((v-ymn)/(ymx-ymn))*(yb-yt);};
+    function P(a){var d="";for(var i=0;i<a.length;i++){d+=(i?" L ":"M ")+X(xs[i]).toFixed(1)+" "+Y(a[i]).toFixed(1);}return d;}
+    var zY=Y(0).toFixed(1);
+    var mk="";[[S.last_close,"now","var(--dim)"],[E0,"BE $"+E0.toFixed(2),"var(--white)"],[K,"trig $"+K.toFixed(2),"var(--amber)"],[Stp,"TP $"+Stp.toFixed(2),"var(--up)"]].forEach(function(m){
+      var xx=X(m[0]).toFixed(1);mk+='<line x1="'+xx+'" y1="'+yt+'" x2="'+xx+'" y2="'+yb+'" stroke="'+m[2]+'" stroke-width="1" stroke-dasharray="2 3" opacity="0.5"/><text x="'+xx+'" y="'+(yt+8)+'" font-size="8.5" fill="'+m[2]+'" text-anchor="middle">'+m[1]+'</text>';});
+    var xl="";[0,2,4,6,8].forEach(function(p){xl+='<text x="'+X(p).toFixed(1)+'" y="'+(yb+13)+'" font-size="8.5" fill="var(--faint)" text-anchor="middle">$'+p+'</text>';});
+    var yl='<text x="'+(x0-4)+'" y="'+(+zY+3)+'" font-size="8.5" fill="var(--faint)" text-anchor="end">0</text>'+
+      '<text x="'+(x0-4)+'" y="'+(Y(ymx)+8).toFixed(1)+'" font-size="8.5" fill="var(--up)" text-anchor="end">+'+Math.round(ymx/1000)+'k</text>'+
+      '<text x="'+(x0-4)+'" y="'+(Y(ymn)-2).toFixed(1)+'" font-size="8.5" fill="var(--down)" text-anchor="end">'+Math.round(ymn/1000)+'k</text>';
+    $("payoff").innerHTML='<line x1="'+x0+'" y1="'+zY+'" x2="'+x1+'" y2="'+zY+'" stroke="var(--line2)"/>'+mk+xl+yl+
+      '<path d="'+P(sp)+'" fill="none" stroke="var(--blue)" stroke-width="1.3" stroke-dasharray="4 3"/>'+
+      '<path d="'+P(st)+'" fill="none" stroke="var(--amber)" stroke-width="1.8"/>'+
+      '<text x="'+x1+'" y="'+(Y(st[st.length-1])-4).toFixed(1)+'" text-anchor="end" font-size="9" fill="var(--amber)">strategy</text>'+
+      '<text x="'+x1+'" y="'+(Y(sp[sp.length-1])+9).toFixed(1)+'" text-anchor="end" font-size="9" fill="var(--blue)">spot</text>';
+    $("cap-pay").textContent="kink $"+K.toFixed(2)+" · cap $"+Stp.toFixed(2);
+
+    var prices=[S.last_close,1,E0,3,K,5,Stp,8];
+    var h='<table style="font-size:11px"><thead><tr><th>Price</th><th>Spot</th><th>Strategy</th><th>Δ</th><th>Regime</th></tr></thead><tbody>';
+    prices.forEach(function(s){
+      var a=spotPL(s)/C, b=stratPL(s)/C, d=b-a, tag=s<K?"pre-trigger (=spot)":(s<=Stp+1e-6?"levered zone":"capped (TP)");
+      h+='<tr><td>$'+s.toFixed(s<1?4:2)+'</td><td class="tnum '+cls(a)+'">'+sgn(a,0)+'</td><td class="tnum '+cls(b)+'">'+sgn(b,0)+
+         '</td><td class="tnum '+(d>1e-6?"up":d<-1e-6?"down":"dim")+'">'+(d>0?"+":"")+(d*100).toFixed(0)+'pt</td>'+
+         '<td style="text-align:left;color:var(--dim);font-size:10px">'+tag+'</td></tr>';
+    });
+    $("scn").innerHTML=h+'</tbody></table>';
+    $("cap-scn").textContent="P&L % vs $"+Math.round(C).toLocaleString()+" cost";
+  })();
+
+  var stats=[
+    ["Ann return",sgn(S.ret_ann,0),cls(S.ret_ann)],["Ann vol",pct(S.vol_ann,0),"org"],
+    ["Sharpe",num(S.sharpe),cls(S.sharpe)],["Sortino",num(S.sortino),cls(S.sortino)],
+    ["Downside dev",pct(S.downside_dev_ann,0),"dim"],["VaR95 1d",pct(S.var95_d),"down"],
+    ["CVaR95 1d",pct(S.cvar95_d),"down"],["Skew",num(S.skew),cls(S.skew)],
+    ["Exc kurtosis",num(S.kurtosis,1),"org"],["Beta BTC",num(S.beta_btc),"blue"],
+    ["Corr BTC",num(S.corr_btc),"blue"],["DD duration",S.max_dd_duration+"d","dim"],
+    ["Vertical cum",pct(S.vertical_cum,0),"down"],["Alpha vs vert",sgn(S.rel_final,0),cls(S.rel_final)],
+    ["Beta vert",num(S.beta_vert),"blue"],["Corr vert",num(S.corr_vert),"blue"],
+    ["Peer rank",S.frax_rank+" / "+(S.n_peers+1),"down"],
+    ["vs worst peer",sgn(S.cumret-S.peer_worst.cum,0),cls(S.cumret-S.peer_worst.cum)],
+    ["Vert Sharpe",num(S.vertical_sharpe),cls(S.vertical_sharpe)],
+    ["FRAX vs vert Sharpe",(S.sharpe-S.vertical_sharpe).toFixed(2),cls(S.sharpe-S.vertical_sharpe)]
+  ];
+  $("stats").innerHTML=stats.map(function(c){return '<div class="c"><div class="k">'+c[0]+'</div><div class="v '+c[2]+'">'+c[1]+'</div></div>';}).join("");
+
+  function line(svg,vals,o){o=o||{};var x0=6,x1=554,yt=8,yb=130;
+    var v=vals.filter(function(x){return x!=null;});
+    var mn=o.min!=null?o.min:Math.min.apply(null,v),mx=o.max!=null?o.max:Math.max.apply(null,v),rng=(mx-mn)||1;
+    var X=function(i){return x0+(i/(vals.length-1))*(x1-x0);},Y=function(val){return yb-((val-mn)/rng)*(yb-yt);};
+    var d="",st=false;for(var i=0;i<vals.length;i++){if(vals[i]==null)continue;d+=(st?" L ":"M ")+X(i).toFixed(1)+" "+Y(vals[i]).toFixed(1);st=true;}
+    var refs="";(o.refs||[]).forEach(function(r){if(r.v<mn||r.v>mx)return;var y=Y(r.v).toFixed(1);
+      refs+='<line x1="'+x0+'" y1="'+y+'" x2="'+x1+'" y2="'+y+'" stroke="'+r.c+'" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/><text x="'+x1+'" y="'+(y-2)+'" text-anchor="end" font-size="8.5" fill="'+r.c+'">'+r.t+'</text>';});
+    var vx="";(o.vlines||[]).forEach(function(l){var xx=X(l.i).toFixed(1);vx+='<line x1="'+xx+'" y1="'+yt+'" x2="'+xx+'" y2="'+yb+'" stroke="'+l.c+'" stroke-width="1" stroke-dasharray="2 3" opacity="0.6"/><text x="'+xx+'" y="'+(yt+8)+'" font-size="8.5" fill="'+l.c+'" text-anchor="middle">'+l.t+'</text>';});
+    var area=o.area?('<path d="'+d+' L '+X(vals.length-1)+' '+Y(mn)+' L '+X(0)+' '+Y(mn)+' Z" fill="'+o.area+'" opacity="0.13"/>'):"";
+    var zero="";if(o.zero!=null&&o.zero>=mn&&o.zero<=mx){var yz=Y(o.zero).toFixed(1);zero='<line x1="'+x0+'" y1="'+yz+'" x2="'+x1+'" y2="'+yz+'" stroke="var(--line2)" stroke-width="1"/>';}
+    svg.innerHTML=zero+area+vx+refs+'<path d="'+d+'" fill="none" stroke="'+o.stroke+'" stroke-width="1.4"/>';
+  }
+  var closes=R.map(function(r){return r.close;});
+  var splitIdx=R.findIndex(function(r){return r.ticker==="FRAX";});
+  var mfeIdx=R.reduce(function(bi,r,i){return r.cumret>R[bi].cumret?i:bi;},0);
+  var macro=S.macro||[];
+  var macroV=macro.map(function(m,k){return {i:m.idx,c:"var(--blue)",t:String(k+1)};});
+  line($("px"),closes,{stroke:"var(--amber)",refs:[{v:S.entry_px,c:"var(--white)",t:"entry "+S.entry_px}],
+    vlines:(splitIdx>0?[{i:splitIdx,c:"var(--mag)",t:"→FRAX"}]:[]).concat([{i:mfeIdx,c:"var(--up)",t:"MFE"}]).concat(macroV)});
+  var vals=R.map(function(r){return r.value;}),pk=-1e18,dd=vals.map(function(v){pk=Math.max(pk,v);return (v/pk-1)*100;});
+  line($("dd"),dd,{stroke:"var(--down)",area:"var(--down)",zero:0,max:0,vlines:macroV});
+  // macro event legend
+  if(macro.length){
+    $("macleg").innerHTML=macro.map(function(m,k){
+      return '<span class="me"><b>'+(k+1)+'</b> '+m.date+' — '+m.label+'</span>';}).join("");
+  }
+  $("cap-px").textContent="$"+Math.min.apply(null,closes).toFixed(2)+"–$"+Math.max.apply(null,closes).toFixed(2)+" · arm $"+S.trigger.toFixed(2);
+  $("cap-dd").textContent="min "+pct(S.max_dd);
+
+  (function(){var c=S.hist_counts,e=S.hist_edges,x0=6,x1=554,yt=8,yb=120,gap=3,mx=Math.max.apply(null,c)||1,n=c.length,bw=(x1-x0)/n,bars="";
+    for(var i=0;i<n;i++){var h=(c[i]/mx)*(yb-yt),x=x0+i*bw,ct=(e[i]+e[i+1])/2,col=ct<-0.5?"var(--down)":ct>0.5?"var(--up)":"var(--dim)";
+      bars+='<rect x="'+(x+gap/2).toFixed(1)+'" y="'+(yb-h).toFixed(1)+'" width="'+(bw-gap).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="'+col+'" opacity="0.85"/>';}
+    var zx=(x0+((0-e[0])/(e[n]-e[0]))*(x1-x0)).toFixed(1);
+    $("hist").innerHTML=bars+'<line x1="'+x0+'" y1="'+yb+'" x2="'+x1+'" y2="'+yb+'" stroke="var(--line2)"/><line x1="'+zx+'" y1="'+yt+'" x2="'+zx+'" y2="'+yb+'" stroke="var(--line2)" stroke-dasharray="2 3"/><text x="'+x0+'" y="138" font-size="8.5" fill="var(--faint)">'+e[0]+'%</text><text x="'+x1+'" y="138" text-anchor="end" font-size="8.5" fill="var(--faint)">+'+e[n]+'%</text>';
+    $("cap-hist").textContent="skew "+num(S.skew)+" kurt "+num(S.kurtosis,1);})();
+
+  var rv=R.map(function(r){return r.vol30!=null?r.vol30*100:null;});
+  line($("vol"),rv,{stroke:"var(--orange)",min:0});
+  var rvv=rv.filter(function(x){return x!=null;});
+  $("cap-vol").textContent=rvv.length?(Math.min.apply(null,rvv).toFixed(0)+"–"+Math.max.apply(null,rvv).toFixed(0)+"%"):"";
+
+  // ── competitive positioning ──
+  $("c-peers").textContent=S.n_peers+"-peer stablecoin-issuer basket, equal-weight";
+  var worseThan=S.peer_final.filter(function(p){return p.cum<S.cumret;}).map(function(p){return p.sym;});
+  var rankNote=(S.frax_rank===1?" — worst in the vertical"
+              :(S.frax_rank<=Math.ceil((S.n_peers+1)/4)?" — bottom quartile":""));
+  $("rangebar").innerHTML="FRAX ranks <span class=\"r\">#"+S.frax_rank+" of "+(S.n_peers+1)+"</span>"+rankNote+
+    " among decentralized stablecoin issuers &nbsp;·&nbsp; range: best <b>"+S.peer_best.sym+" "+sgn(S.peer_best.cum,0)+
+    "</b> · median <b>"+S.peer_median.sym+" "+sgn(S.peer_median.cum,0)+"</b> · worst <b>"+S.peer_worst.sym+" "+sgn(S.peer_worst.cum,0)+
+    "</b> &nbsp;·&nbsp; FRAX <b>"+sgn(S.cumret,0)+"</b> is <span class=\"r\">"+sgn(S.rel_final,0)+"</span> vs the basket ("+sgn(S.vertical_cum,0)+")"+
+    (worseThan.length?" · only "+worseThan.join(", ")+" fared worse":"");
+  (function(){
+    var fr=R.map(function(r){return r.cumret*100;});
+    var bk=R.map(function(r){return r.peer_cum!=null?r.peer_cum*100:null;});
+    var all=fr.concat(bk.filter(function(x){return x!=null;}));
+    var mn=Math.min.apply(null,all),mx=Math.max.apply(null,all),rng=(mx-mn)||1;
+    var x0=6,x1=554,yt=8,yb=126;
+    var X=function(i){return x0+(i/(fr.length-1))*(x1-x0);},Y=function(v){return yb-((v-mn)/rng)*(yb-yt);};
+    function path(a){var d="",st=false;for(var i=0;i<a.length;i++){if(a[i]==null)continue;d+=(st?" L ":"M ")+X(i).toFixed(1)+" "+Y(a[i]).toFixed(1);st=true;}return d;}
+    var zero=(0>=mn&&0<=mx)?'<line x1="'+x0+'" y1="'+Y(0).toFixed(1)+'" x2="'+x1+'" y2="'+Y(0).toFixed(1)+'" stroke="var(--line2)"/>':"";
+    $("rel").innerHTML=zero+
+      '<path d="'+path(bk)+'" fill="none" stroke="var(--blue)" stroke-width="1.4"/>'+
+      '<path d="'+path(fr)+'" fill="none" stroke="var(--amber)" stroke-width="1.6"/>'+
+      '<text x="'+x1+'" y="'+(Y(fr[fr.length-1])-3).toFixed(1)+'" text-anchor="end" font-size="9" fill="var(--amber)">FRAX '+sgn(S.cumret,0)+'</text>'+
+      '<text x="'+x1+'" y="'+(Y(bk[bk.length-1])+10).toFixed(1)+'" text-anchor="end" font-size="9" fill="var(--blue)">VERT '+sgn(S.vertical_cum,0)+'</text>';
+    $("cap-rel").textContent="alpha "+sgn(S.rel_final,0);
+  })();
+
+  // ── exit-liquidity readout (today) ──
+  $("exitbar").innerHTML='<div class="row"><span class="lb">Exit today</span><span class="tx">'+
+    'ADV <b>'+money(S.exit_adv)+'</b> &nbsp;·&nbsp; position = <b>'+S.exit_part.toFixed(2)+'×</b> ADV &nbsp;·&nbsp; '+
+    'est. 1-day exit slippage <b>'+pct(S.exit_slip,1)+'</b> &nbsp;·&nbsp; net realizable <b>'+money(S.exit_net)+'</b> &nbsp;·&nbsp; '+
+    '~<b>'+S.exit_days+' days</b> to unwind at 25% of ADV. Liquidity was never the binding constraint — exit stayed feasible throughout, so holding was a choice, not a trap.</span></div>';
+
+  $("events").innerHTML=E.map(function(e){return '<div class="e"><span class="dt">'+e.date+'</span><span class="kind k-'+e.kind+'">'+e.kind+'</span><span class="msg">'+e.msg+'</span></div>';}).join("");
+
+  var html="";
+  for(var i=0;i<R.length;i++){var r=R[i],hi=r.conv>=S.threshold?" hi":"";
+    html+='<tr class="'+hi+'"><td>'+r.date+'</td>'+
+      '<td><span class="tkr '+r.ticker+'">'+r.ticker+'</span></td>'+
+      '<td class="tnum white">'+r.close.toFixed(4)+'</td>'+
+      '<td class="tnum '+cls(r.day_ret)+'">'+sgn(r.day_ret,1)+'</td>'+
+      '<td class="tnum">'+r.mom.toFixed(2)+'</td>'+
+      '<td class="tnum'+(r.conv>=S.threshold?" org":"")+'">'+r.conv.toFixed(2)+'</td>'+
+      '<td class="tnum org">'+sgn(r.dist_trigger,0)+'</td>'+
+      '<td class="tnum">'+money(r.value)+'</td>'+
+      '<td class="tnum '+cls(r.upnl)+'">'+money(r.upnl)+'</td>'+
+      '<td class="tnum '+cls(r.cumret)+'">'+sgn(r.cumret)+'</td>'+
+      '<td class="tnum '+cls(r.peer_cum)+'">'+(r.peer_cum!=null?sgn(r.peer_cum):'—')+'</td>'+
+      '<td class="tnum '+cls(r.rel)+'">'+(r.rel!=null?sgn(r.rel):'—')+'</td>'+
+      '<td class="tnum dim">'+(r.adv_usd!=null?money(r.adv_usd):'—')+'</td>'+
+      '<td class="tnum">'+(r.exit_part!=null?r.exit_part.toFixed(2)+'×':'—')+'</td>'+
+      '<td class="tnum down">'+(r.exit_slip!=null?pct(r.exit_slip,1):'—')+'</td>'+
+      '<td class="tnum white">'+(r.exit_net!=null?money(r.exit_net):'—')+'</td>'+
+      '<td class="note">'+r.note+'</td></tr>';}
+  $("rows").innerHTML=html;
+
+  $("foot").innerHTML="Source: REAL daily candles — FXS/USDT through "+S.ticker_split+", then FRAX/USDT (ticker migrated in the Frax North Star rebrand), stitched into one continuous track to "+S.last_date+"; beta/corr vs BTC/USDT. "+
+    "Principal carries NO stop before leverage — held to the $"+S.trigger.toFixed(2)+" arm, never reached, so the levered leg never fired. Agent action every day = HOLD; each row states why (below arm, no downside stop by mandate, add-gate status). "+
+    "Vertical benchmark = equal-weight basket of decentralized stablecoin-issuer peers ("+S.peers_used.join(", ")+"), each rebased to entry (MKR→SKY chained by return like FXS→FRAX); αVert = FRAX cum − basket cum. FRAX "+sgn(S.cumret,0)+" vs vertical "+sgn(S.vertical_cum,0)+" → "+sgn(S.rel_final,0)+" relative; FRAX ranks #"+S.frax_rank+" of "+(S.n_peers+1)+" in its own vertical — the stablecoin sector fell hard AND FRAX sat near the bottom of it. "+
+    "Macro markers on the price/drawdown charts are real dated crypto-macro shocks (Oct-2025 tariff crash, Nov ETF outflows, Dec meltdown, Jan-2026 FOMC hold) — sourced, not fabricated; they contextualize the drawdown legs. "+
+    "Exit-liquidity columns use the square-root market-impact law (slippage ≈ 0.9·σ·√(position÷daily-volume)) on real daily volume; Exit/ADV is the position as a multiple of that day's traded volume, NetExit$ the value after modeled slippage. "+
+    "Composite uses momentum from price; TVL/social/news lack daily backfill and sit at neutral 0.50. Marked to the $"+S.entry_px.toFixed(2)+" cost basis. Independent analysis, not affiliated with Frax Finance; not financial advice. Generated "+S.generated+".";
+})();
+</script>
