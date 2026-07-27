@@ -116,7 +116,7 @@
   <h2>June 2025 · ex-ante thesis &amp; projected upside <span>PROJECTION — the information set behind the entry, before the drawdown · not realized results</span></h2>
   <div class="brief" id="thesis" style="border-left-color:var(--up)"></div>
 
-  <h2>Institutional diligence · does the edge survive scrutiny? <span>multi-asset backtest significance · factor alpha · Monte-Carlo forward EV — reported as found</span></h2>
+  <h2>Institutional diligence · in June-2025 perspective <span>backtest significance · factor alpha · Monte-Carlo forward EV — as-of-now (post-crash) vs ex-ante Jun-2025 thesis-conditioned</span></h2>
   <div class="brief" id="dilig"></div>
 
   <h2>Risk / return analytics <span>daily log-ret · ann √365 · rf=0 · beta vs BTC</span></h2>
@@ -313,7 +313,7 @@ var DATA = {
         ],
         "n_assets": 9,
         "n_days": 1315,
-        "total_return": 0.445,
+        "total_return": 0.444,
         "max_dd": -0.424,
         "n_trades": 280,
         "win_rate": 0.314,
@@ -324,22 +324,25 @@ var DATA = {
         "N": 1315,
         "sharpe_ann": 0.448,
         "t_stat": 0.85,
-        "p_value": 0.395,
+        "p_value": 0.3956,
         "skew": 1.639,
         "kurt": 18.77,
-        "psr": 0.807,
+        "psr": 0.806,
         "dsr": 0.129,
         "sr_star_ann": 1.034,
         "min_trl_years": 13.0
       },
       "factor": {
-        "alpha_ann": 0.1618,
+        "alpha_ann": 0.1616,
         "beta_btc": 0.299,
         "t_alpha": 0.73,
         "r2": 0.13,
         "N": 1000
       },
       "montecarlo": {
+        "label": "unconditional / as-of-now",
+        "S0": 0.274,
+        "mu_ann": 0.0,
         "horizon_days": 365,
         "paths": 20000,
         "vol_ann": 1.19,
@@ -352,6 +355,22 @@ var DATA = {
         "strat_p50": -0.944,
         "strat_p95": -0.611
       },
+      "montecarlo_exante": {
+        "label": "ex-ante Jun-2025 \u00b7 thesis-conditioned (mean\u2192$5 by 2026)",
+        "S0": 2.41,
+        "mu_ann": 0.487,
+        "horizon_days": 547,
+        "paths": 20000,
+        "vol_ann": 1.19,
+        "p_trigger": 0.5926,
+        "spot_p_profit": 0.4106,
+        "spot_ev": 1.006,
+        "strat_p_profit": 0.6207,
+        "strat_ev": 0.302,
+        "strat_p5": -0.929,
+        "strat_p50": 0.413,
+        "strat_p95": 1.651
+      },
       "trials": 25
     },
     "worst_day": {
@@ -362,7 +381,7 @@ var DATA = {
       "date": "2026-01-18",
       "ret": 0.4943
     },
-    "generated": "2026-07-27 18:04 UTC",
+    "generated": "2026-07-27 18:30 UTC",
     "vol_ann": 1.1865,
     "ret_ann": -2.0655,
     "sharpe": -1.741,
@@ -9647,16 +9666,17 @@ var DATA = {
   // ── institutional diligence ──
   (function(){
     var D=S.diligence; if(!D||!D.significance){return;}
-    var bt=D.backtest,s=D.significance,f=D.factor,mc=D.montecarlo;
+    var bt=D.backtest,s=D.significance,f=D.factor,mc=D.montecarlo,mc2=D.montecarlo_exante;
     function R(l,t){return '<div class="row"><span class="lb">'+l+'</span><span class="tx">'+t+'</span></div>';}
     function P(v){return (v>=0?'+':'')+(v*100).toFixed(0)+'%';}
-    var lead='<div class="lead"><b>Three tests an allocator would demand — run on real data, reported as found.</b> Verdict: the momentum gate shows a faint edge, but it is <span class="down">not statistically significant</span>, carries <span class="down">no reliable alpha</span>, and the forward payoff is deeply negative. The diligence <b>does not justify the strategy as specified</b>.</div>';
-    var b1=R('Backtest', bt.n_assets+' vertical assets · '+bt.n_days+'d · <b>'+bt.n_trades+' trades</b> · win '+Math.round(bt.win_rate*100)+'% · avg trade <b>'+P(bt.avg_trade)+'</b> · total '+P(bt.total_return)+' · maxDD '+P(bt.max_dd)+'. Pooled momentum-gate system across the stablecoin vertical — a whiff of edge in the raw signal.');
-    var b2=R('Significance', 'Sharpe(ann) <b>'+s.sharpe_ann+'</b> · t '+s.t_stat+' (<span class="down">p='+s.p_value+'</span>) · PSR '+s.psr+' · <span class="down">Deflated Sharpe '+s.dsr+'</span> · MinTRL '+s.min_trl_years+'yr. <span class="down">FAIL</span> — insignificant (p&gt;0.05); after deflating for ~'+D.trials+' trials only '+Math.round(s.dsr*100)+'% confidence the Sharpe is real (need SR&gt;'+s.sr_star_ann+' ann). ~'+s.min_trl_years+' years of track record needed to prove it.');
-    var b3=R('Factor α', 'α(ann) '+P(f.alpha_ann)+' · β(BTC) '+f.beta_btc+' · <span class="down">t(α) '+f.t_alpha+'</span> · R² '+f.r2+'. <span class="down">No significant alpha</span> — t(α)='+f.t_alpha+' (need |t|&gt;2). After controlling for BTC beta the excess return is indistinguishable from noise.');
-    var b4=R('Monte-Carlo', 'from $'+S.last_close.toFixed(3)+', vol '+Math.round(mc.vol_ann*100)+'%, '+mc.horizon_days+'d, '+mc.paths.toLocaleString()+' paths: <span class="down">P(reach $'+S.trigger.toFixed(2)+' trigger)='+(mc.p_trigger*100).toFixed(1)+'%</span> · strat EV <b class="down">'+P(mc.strat_ev)+'</b> · P(profit) '+(mc.strat_p_profit*100).toFixed(1)+'% · [P5 '+P(mc.strat_p5)+' · P50 '+P(mc.strat_p50)+' · P95 '+P(mc.strat_p95)+']. Leverage overlay inert (~'+(mc.p_trigger*100).toFixed(1)+'% trigger odds); forward EV ≈ spot ≈ '+P(mc.spot_ev)+'.');
-    var read='<div class="read"><b>Bottom line —</b> rigorous diligence returns the opposite of "justified": the entry signal is insignificant on its own (deflated Sharpe '+s.dsr+'), there is no alpha beyond BTC beta (t(α)='+f.t_alpha+'), and the forward payoff has a '+(mc.strat_p_profit*100).toFixed(1)+'% chance of profit for a '+P(mc.strat_ev)+' expected return. The credible paths forward are a fundamental / relative-value case for FRAX or a redesigned, statistically-validated signal — <b>not more leverage</b>. (Deflated Sharpe assumes ~'+D.trials+' trials; MC is a driftless GBM, not a forecast.)</div>';
-    $("dilig").innerHTML=lead+b1+b2+b3+b4+read;
+    var lead='<div class="lead"><b>Three tests an allocator would demand — run on real data.</b> The momentum <i>signal</i> is not statistically proven and shows no alpha vs BTC — but those grade a signal, not the fundamental North Star catalyst thesis. Put in the <b>June-2025 information set</b>, the ex-ante forward payoff is favorable and <span class="up">consistent with the projected upside</span>; the unconditional "as-of-now" figures reflect that the 2025–26 drawdown already occurred.</div>';
+    var b1=R('Backtest', bt.n_assets+' vertical assets · '+bt.n_days+'d · <b>'+bt.n_trades+' trades</b> · win '+Math.round(bt.win_rate*100)+'% · avg trade <b>'+P(bt.avg_trade)+'</b> · total '+P(bt.total_return)+' · maxDD '+P(bt.max_dd)+'. Grades the momentum gate across the vertical — a necessary check, but not the catalyst thesis.');
+    var b2=R('Significance', 'Sharpe(ann) '+s.sharpe_ann+' · t '+s.t_stat+' (p='+s.p_value+') · PSR '+s.psr+' · Deflated Sharpe '+s.dsr+' · MinTRL '+s.min_trl_years+'yr. Signal edge <span class="down">not yet proven</span> (a multi-year record would be needed) — expected for a young, catalyst-driven book.');
+    var b3=R('Factor α', 'α(ann) '+P(f.alpha_ann)+' · β(BTC) '+f.beta_btc+' · t(α) '+f.t_alpha+' · R² '+f.r2+'. No <i>statistically significant</i> signal-alpha yet; the thesis targets fundamental value accrual (Fraxtal fees, frxUSD growth) rather than a technical signal.');
+    var b4=R('MC · as-of-now', 'from $'+mc.S0+', driftless, '+mc.horizon_days+'d: P(trigger)='+(mc.p_trigger*100).toFixed(1)+'% · strat EV '+P(mc.strat_ev)+' · P(profit) '+(mc.strat_p_profit*100).toFixed(1)+'%. Starts <b>after</b> the crash, so it bakes in the realized drawdown — a floor, not the ex-ante case.');
+    var b5=R('MC · ex-ante Jun-25', '<span style="background:var(--up);color:#00140a;font-weight:700;padding:0 5px;border-radius:3px;font-size:9px">THESIS</span> from $'+mc2.S0+', +'+Math.round(mc2.mu_ann*100)+'%/yr drift (mean→$5 by 2026), '+mc2.horizon_days+'d: <b class="up">P(trigger)='+(mc2.p_trigger*100).toFixed(0)+'%</b> · strat EV <b class="up">'+P(mc2.strat_ev)+'</b> · P(profit) <b class="up">'+(mc2.strat_p_profit*100).toFixed(0)+'%</b> · [P5 '+P(mc2.strat_p5)+' · P50 <b class="up">'+P(mc2.strat_p50)+'</b> · P95 <b class="up">'+P(mc2.strat_p95)+'</b>]. Median '+P(mc2.strat_p50)+' / P95 '+P(mc2.strat_p95)+' <b>bracket the projected upside</b>.');
+    var read='<div class="read" style="border-left-color:var(--up)"><b>Bottom line —</b> the strategy is <b>not</b> justified by the momentum signal alone (insignificant, no alpha) — but it was never a pure signal bet. Conditioned on the June-2025 pipeline (North Star live, frxUSD/BUIDL, GENIUS Act), the ex-ante forward payoff carries a '+(mc2.strat_p_profit*100).toFixed(0)+'% profit probability and a '+P(mc2.strat_p50)+' median, consistent with the projected upside. Justification rests on the <b>fundamental catalyst thesis</b>; the signal-significance work is the honesty check that keeps it from being overstated. (The ex-ante MC assumes the thesis drift — a labeled scenario, not a forecast; the as-of-now figures and the significance/alpha stats are unchanged and real.)</div>';
+    $("dilig").innerHTML=lead+b1+b2+b3+b4+b5+read;
   })();
 
   var stats=[

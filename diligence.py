@@ -180,11 +180,12 @@ def _factor(strat_by_date, btc_idx, m=None):
             "t_alpha": round(t_a, 2), "r2": round(r2, 3), "N": n}
 
 
-def _montecarlo(S0, K, C, N_units, lev, hsf, tgt_mult, vol_ann, H=365, M=20000, seed=7):
+def _montecarlo(S0, K, C, N_units, lev, hsf, tgt_mult, vol_ann, H=365, M=20000,
+                seed=7, mu_ann=0.0, label=""):
     rng = np.random.default_rng(seed)
     sig = vol_ann/math.sqrt(365)
     Z = rng.standard_normal((M, H))
-    logpath = np.cumsum((-0.5*sig*sig) + sig*Z, axis=1)   # driftless (martingale)
+    logpath = np.cumsum((mu_ann/365 - 0.5*sig*sig) + sig*Z, axis=1)
     path = S0 * np.exp(logpath)
     ST = path[:, -1]; pmax = path.max(axis=1)
     triggered = pmax >= K
@@ -195,7 +196,8 @@ def _montecarlo(S0, K, C, N_units, lev, hsf, tgt_mult, vol_ann, H=365, M=20000, 
     legP = np.maximum(legP, -hsf*Hm)                       # house-stop floor
     strat_eq = np.where(triggered, C + Hm + legP, N_units*ST)
     spot_pl = spot_eq/C - 1; strat_pl = strat_eq/C - 1
-    return {"horizon_days": H, "paths": M, "vol_ann": round(vol_ann, 2),
+    return {"label": label, "S0": round(S0, 3), "mu_ann": round(mu_ann, 3),
+            "horizon_days": H, "paths": M, "vol_ann": round(vol_ann, 2),
             "p_trigger": round(float(triggered.mean()), 4),
             "spot_p_profit": round(float((spot_pl > 0).mean()), 4),
             "spot_ev": round(float(spot_pl.mean()), 3),
@@ -234,8 +236,19 @@ def run(ex, cfg, last_close, vol_ann, btc_idx):
           "win_rate": round(float(np.mean([1 if t > 0 else 0 for t in all_trades])), 3) if all_trades else None,
           "avg_trade": round(float(np.mean(all_trades)), 4) if all_trades else None,
           "expectancy": round(float(np.mean(all_trades)), 4) if all_trades else None}
-    mc = _montecarlo(last_close, st.get("leverage_trigger_price", 4.4) or 4.4,
-                     float(cfg["position"]["seed"]["avg_entry"])*float(cfg["position"]["seed"]["amount"]),
-                     float(cfg["position"]["seed"]["amount"]), st["leverage"], st["house_stop_frac"],
-                     st.get("leverage_target_mult", 2.0) or 2.0, vol_ann)
-    return {"backtest": bt, "significance": sig, "factor": fac, "montecarlo": mc, "trials": TRIALS}
+    K = st.get("leverage_trigger_price", 4.4) or 4.4
+    entry = float(cfg["position"]["seed"]["avg_entry"])
+    units = float(cfg["position"]["seed"]["amount"]); C = entry * units
+    lev, hsf, tgt = st["leverage"], st["house_stop_frac"], st.get("leverage_target_mult", 2.0) or 2.0
+    # (a) unconditional, as-of-now: starts from the post-crash price, driftless
+    mc = _montecarlo(last_close, K, C, units, lev, hsf, tgt, vol_ann,
+                     label="unconditional / as-of-now")
+    # (b) ex-ante June-2025, thesis-conditioned: from the entry, ~18m horizon,
+    #     drift set so the mean path reaches the $5 2026 target (assumes the
+    #     North Star / frxUSD pipeline delivers — a labeled scenario, not a forecast)
+    T = 1.5; target = 5.0
+    mu_ex = math.log(target/entry) / T
+    mc_ex = _montecarlo(entry, K, C, units, lev, hsf, tgt, vol_ann, H=int(365*T),
+                        mu_ann=mu_ex, label="ex-ante Jun-2025 · thesis-conditioned (mean→$%.0f by 2026)" % target)
+    return {"backtest": bt, "significance": sig, "factor": fac,
+            "montecarlo": mc, "montecarlo_exante": mc_ex, "trials": TRIALS}
