@@ -113,6 +113,9 @@
     <div class="panel"><div class="cap"><span>Scenario table</span><span id="cap-scn"></span></div><div id="scn"></div></div>
   </div>
 
+  <h2>Institutional diligence · does the edge survive scrutiny? <span>multi-asset backtest significance · factor alpha · Monte-Carlo forward EV — reported as found</span></h2>
+  <div class="brief" id="dilig"></div>
+
   <h2>Risk / return analytics <span>daily log-ret · ann √365 · rf=0 · beta vs BTC</span></h2>
   <div class="grid g8" id="stats"></div>
 
@@ -242,6 +245,21 @@ var DATA = __DATA__;
     });
     $("scn").innerHTML=h+'</tbody></table>';
     $("cap-scn").textContent="P&L % vs $"+Math.round(C).toLocaleString()+" cost";
+  })();
+
+  // ── institutional diligence ──
+  (function(){
+    var D=S.diligence; if(!D||!D.significance){return;}
+    var bt=D.backtest,s=D.significance,f=D.factor,mc=D.montecarlo;
+    function R(l,t){return '<div class="row"><span class="lb">'+l+'</span><span class="tx">'+t+'</span></div>';}
+    function P(v){return (v>=0?'+':'')+(v*100).toFixed(0)+'%';}
+    var lead='<div class="lead"><b>Three tests an allocator would demand — run on real data, reported as found.</b> Verdict: the momentum gate shows a faint edge, but it is <span class="down">not statistically significant</span>, carries <span class="down">no reliable alpha</span>, and the forward payoff is deeply negative. The diligence <b>does not justify the strategy as specified</b>.</div>';
+    var b1=R('Backtest', bt.n_assets+' vertical assets · '+bt.n_days+'d · <b>'+bt.n_trades+' trades</b> · win '+Math.round(bt.win_rate*100)+'% · avg trade <b>'+P(bt.avg_trade)+'</b> · total '+P(bt.total_return)+' · maxDD '+P(bt.max_dd)+'. Pooled momentum-gate system across the stablecoin vertical — a whiff of edge in the raw signal.');
+    var b2=R('Significance', 'Sharpe(ann) <b>'+s.sharpe_ann+'</b> · t '+s.t_stat+' (<span class="down">p='+s.p_value+'</span>) · PSR '+s.psr+' · <span class="down">Deflated Sharpe '+s.dsr+'</span> · MinTRL '+s.min_trl_years+'yr. <span class="down">FAIL</span> — insignificant (p&gt;0.05); after deflating for ~'+D.trials+' trials only '+Math.round(s.dsr*100)+'% confidence the Sharpe is real (need SR&gt;'+s.sr_star_ann+' ann). ~'+s.min_trl_years+' years of track record needed to prove it.');
+    var b3=R('Factor α', 'α(ann) '+P(f.alpha_ann)+' · β(BTC) '+f.beta_btc+' · <span class="down">t(α) '+f.t_alpha+'</span> · R² '+f.r2+'. <span class="down">No significant alpha</span> — t(α)='+f.t_alpha+' (need |t|&gt;2). After controlling for BTC beta the excess return is indistinguishable from noise.');
+    var b4=R('Monte-Carlo', 'from $'+S.last_close.toFixed(3)+', vol '+Math.round(mc.vol_ann*100)+'%, '+mc.horizon_days+'d, '+mc.paths.toLocaleString()+' paths: <span class="down">P(reach $'+S.trigger.toFixed(2)+' trigger)='+(mc.p_trigger*100).toFixed(1)+'%</span> · strat EV <b class="down">'+P(mc.strat_ev)+'</b> · P(profit) '+(mc.strat_p_profit*100).toFixed(1)+'% · [P5 '+P(mc.strat_p5)+' · P50 '+P(mc.strat_p50)+' · P95 '+P(mc.strat_p95)+']. Leverage overlay inert (~'+(mc.p_trigger*100).toFixed(1)+'% trigger odds); forward EV ≈ spot ≈ '+P(mc.spot_ev)+'.');
+    var read='<div class="read"><b>Bottom line —</b> rigorous diligence returns the opposite of "justified": the entry signal is insignificant on its own (deflated Sharpe '+s.dsr+'), there is no alpha beyond BTC beta (t(α)='+f.t_alpha+'), and the forward payoff has a '+(mc.strat_p_profit*100).toFixed(1)+'% chance of profit for a '+P(mc.strat_ev)+' expected return. The credible paths forward are a fundamental / relative-value case for FRAX or a redesigned, statistically-validated signal — <b>not more leverage</b>. (Deflated Sharpe assumes ~'+D.trials+' trials; MC is a driftless GBM, not a forecast.)</div>';
+    $("dilig").innerHTML=lead+b1+b2+b3+b4+read;
   })();
 
   var stats=[
