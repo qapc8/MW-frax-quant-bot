@@ -113,6 +113,9 @@
     <div class="panel"><div class="cap"><span>Scenario table</span><span id="cap-scn"></span></div><div id="scn"></div></div>
   </div>
 
+  <h2>June 2025 · ex-ante thesis &amp; projected upside <span>PROJECTION — the information set behind the entry, before the drawdown · not realized results</span></h2>
+  <div class="brief" id="thesis" style="border-left-color:var(--up)"></div>
+
   <h2>Institutional diligence · does the edge survive scrutiny? <span>multi-asset backtest significance · factor alpha · Monte-Carlo forward EV — reported as found</span></h2>
   <div class="brief" id="dilig"></div>
 
@@ -245,6 +248,30 @@ var DATA = __DATA__;
     });
     $("scn").innerHTML=h+'</tbody></table>';
     $("cap-scn").textContent="P&L % vs $"+Math.round(C).toLocaleString()+" cost";
+  })();
+
+  // ── June 2025 ex-ante thesis & projected upside (labeled projection) ──
+  (function(){
+    var N=S.amount, C=S.cost_basis, K=S.trigger, E0=S.entry_px, lev=S.leverage;
+    var H=N*K-C, Stp=K*(1+((S.lev_target_mult||2)-1)/lev);
+    function seq(s){ return s<K ? N*s : C+H+lev*H*(Math.min(s,Stp)/K-1); }
+    function R(l,t){return '<div class="row"><span class="lb">'+l+'</span><span class="tx">'+t+'</span></div>';}
+    var lead='<div class="lead"><span style="background:var(--up);color:#00140a;font-weight:800;padding:1px 6px;border-radius:3px;font-size:10px">PROJECTION · EX-ANTE JUN 2025</span> &nbsp; Judged on the information set at entry (before the 2025–26 drawdown), the bet was a plausible long: FRAX transitioning to the flagship value-accrual asset of a real, institutionally-backed stablecoin franchise. The path below is a <b>projection contingent on the thesis</b>, not a realized result.</div>';
+    var d1=R('Flagship token','<b>North Star</b> (FIP-428, live Apr 2025): FXS→FRAX becomes the <b>gas + staking token of Fraxtal</b> (sovereign L2), 1:1 conversion. Protocol usage, fees and staking demand consolidate into one asset instead of sharing the stage with the stablecoin brand.');
+    var d2=R('RWA backing','<b>frxUSD</b> backed by <b>BlackRock BUIDL</b> (US T-bills, cash, repo) tokenized by <b>Securitize</b>; direct fiat redemption via FinresPBC. Puts Frax squarely in the tokenized-treasury / institutional-stablecoin wave with credible reserves.');
+    var d3=R('Regulatory','<b>GENIUS Act</b> stablecoin framework advancing through 2025 — favors compliant, reserve-backed dollars. frxUSD’s institutional posture is built for exactly that regime; the token is the high-beta expression of the franchise’s growth.');
+    var d4=R('New cashflows','FRAX-backed <b>bonds</b> + <b>Flox Capacitor</b> boost + fee/buyback mechanics route protocol revenue toward token value accrual — a fundamental bid distinct from pure speculation.');
+    var d5=R('Honest counter','Not one-sided: the North Star <b>tail emission</b> (8%/yr → 3% floor over 5y) is real dilution, and L2 + stablecoin competition is fierce. The thesis needs execution, not just narrative.');
+    // projected payoff at thesis milestones
+    var ms=[[3.00,'Jul-2025 target'],[K,'leverage arms'],[5.00,'2026 target'],[Stp,'take-profit cap']];
+    var tb='<div class="row"><span class="lb">Proj. upside</span><span class="tx" style="width:100%"><table style="width:100%;font-size:11px;margin-top:2px"><thead><tr><th style="text-align:left">Milestone</th><th>Price</th><th>Proj. value</th><th>Proj. return</th><th style="text-align:left">Regime</th></tr></thead><tbody>';
+    ms.forEach(function(m){var s=m[0],v=seq(s),ret=v/C-1;
+      tb+='<tr><td style="text-align:left;color:var(--dim)">'+m[1]+'</td><td class="tnum">$'+s.toFixed(2)+'</td>'+
+          '<td class="tnum">$'+Math.round(v).toLocaleString()+'</td><td class="tnum up">'+(ret>=0?'+':'')+(ret*100).toFixed(0)+'%</td>'+
+          '<td style="text-align:left;color:var(--dim);font-size:10px">'+(s<K?'spot':'3× house-money leg')+'</td></tr>';});
+    tb+='</tbody></table></span></div>';
+    var note='<div class="read" style="border-left-color:var(--up)"><b>As of June 2025 —</b> catalysts are real and sourced (North Star FIP-428; frxUSD/BUIDL via BlackRock/Securitize; GENIUS Act). Projected values are computed from the strategy’s payoff structure at the thesis price targets — <b>a projection, not realized</b>. What actually happened (the −'+Math.abs(Math.round(S.cumret*100))+'% drawdown, the diligence below) remains on this page unchanged; this section shows why the position was rational to open in the June-2025 context, not that it worked out.</div>';
+    $("thesis").innerHTML=lead+d1+d2+d3+d4+d5+tb+note;
   })();
 
   // ── institutional diligence ──
