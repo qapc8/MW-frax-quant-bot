@@ -157,7 +157,6 @@
     </table>
   </div>
 
-  <div class="foot" id="foot"></div>
 </div>
 
 <script>
@@ -452,12 +451,5 @@ var DATA = __DATA__;
       '<td class="tnum white">'+(r.exit_net!=null?money(r.exit_net):'—')+'</td>'+
       '<td class="note">'+r.note+'</td></tr>';}
   $("rows").innerHTML=html;
-
-  $("foot").innerHTML="Source: REAL daily candles — FXS/USDT through "+S.ticker_split+", then FRAX/USDT (ticker migrated in the Frax North Star rebrand), stitched into one continuous track to "+S.last_date+"; beta/corr vs BTC/USDT. "+
-    "Principal carries NO stop before leverage — held to the $"+S.trigger.toFixed(2)+" arm, never reached, so the levered leg never fired. Agent action every day = HOLD; each row states why (below arm, no downside stop by mandate, add-gate status). "+
-    "Vertical benchmark = equal-weight basket of decentralized stablecoin-issuer peers ("+S.peers_used.join(", ")+"), each rebased to entry (MKR→SKY chained by return like FXS→FRAX); αVert = FRAX cum − basket cum. FRAX "+sgn(S.cumret,0)+" vs vertical "+sgn(S.vertical_cum,0)+" → "+sgn(S.rel_final,0)+" relative; FRAX ranks #"+S.frax_rank+" of "+(S.n_peers+1)+" in its own vertical — the stablecoin sector fell hard AND FRAX sat near the bottom of it. "+
-    "Macro markers on the price/drawdown charts are real dated crypto-macro shocks (Oct-2025 tariff crash, Nov ETF outflows, Dec meltdown, Jan-2026 FOMC hold) — sourced, not fabricated; they contextualize the drawdown legs. "+
-    "Exit-liquidity columns use the square-root market-impact law (slippage ≈ 0.9·σ·√(position÷daily-volume)) on real daily volume; Exit/ADV is the position as a multiple of that day's traded volume, NetExit$ the value after modeled slippage. "+
-    "Composite uses momentum from price; TVL/social/news lack daily backfill and sit at neutral 0.50. Marked to the $"+S.entry_px.toFixed(2)+" cost basis. Independent analysis, not affiliated with Frax Finance; not financial advice. Generated "+S.generated+".";
 })();
 </script>
