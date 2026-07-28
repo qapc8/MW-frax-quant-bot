@@ -89,9 +89,6 @@
     <span class="sym" id="c-sym">—</span>
     <span class="t">POSITION MONITOR</span>
     <span class="t" id="c-range">—</span>
-    <span class="last" id="c-last">—</span>
-    <span class="chg" id="c-chg">—</span>
-    <span class="blink">■</span>
   </div>
   <div class="fkeys">
     <span><b>1)</b> Summary</span><span><b>2)</b> Analytics</span><span><b>3)</b> Charts</span>
@@ -177,8 +174,6 @@ var DATA = __DATA__;
 
   $("c-sym").textContent=S.symbol;
   $("c-range").textContent=S.entry_date+" → "+S.last_date;
-  $("c-last").textContent="LAST "+S.last_close.toFixed(4)+" "+S.last_ticker;
-  var chg=S.cumret; $("c-chg").className="chg "+cls(chg); $("c-chg").textContent=sgn(chg)+" CUM";
   $("c-gen").textContent="GEN "+S.generated;
   $("c-phase").textContent="phase "+S.phase+" · leverage NOT armed · principal stop NONE";
 
